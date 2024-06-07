@@ -1,0 +1,8 @@
+.game {
+    background-color: #c7c7c7;
+    margin-top: 5%;
+    width: var(--game-width);
+    height: var(--game-width);
+    padding: 2% 2%;
+    border-radius: 5%;
+}
