@@ -10,5 +10,5 @@ import { GameComponent } from './game/game.component';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  
+
 }

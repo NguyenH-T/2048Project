@@ -1,9 +1,8 @@
 
-body {
-    background-color: #fff9e8;
-}
-
 main {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: flex;
     width: 100%;
     height: 100%;
@@ -12,8 +11,8 @@ main {
 
 .content {
     --game-width: 500px;
-    min-width: var(--game-width);
     width: var(--game-width);
+    height: 100%;
 }
 
 .head-container {

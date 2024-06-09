@@ -1,8 +1,18 @@
-.game {
+.game-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: #c7c7c7;
     margin-top: 5%;
     width: var(--game-width);
     height: var(--game-width);
-    padding: 2% 2%;
     border-radius: 5%;
+}
+
+.game {
+    position: relative;
+    width: 85%;
+    height: 85%;
+    top: 0;
+    left: 0;
 }

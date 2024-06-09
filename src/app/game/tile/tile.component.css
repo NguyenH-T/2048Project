@@ -1,0 +1,6 @@
+.tile {
+    position: absolute;
+    width: 22%;
+    height: 22%;
+    background-color: white;
+}
