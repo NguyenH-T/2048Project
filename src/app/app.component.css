@@ -19,7 +19,8 @@ main {
     display: flex;
     justify-content: flex-start;
     width: 100%;
-    height: 20%;
+    height: 125px;
+    margin-top: 4%;
 }
 
 .right-container {

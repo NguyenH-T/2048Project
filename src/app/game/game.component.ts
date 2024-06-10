@@ -1,5 +1,6 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { TileComponent } from './tile/tile.component';
+import { empty } from 'rxjs';
 
 class TileData {
   id: number;
@@ -12,6 +13,7 @@ class TileData {
     this.positionId = _positionId
   }
 }
+const chanceFor4Value = 0.25
 
 @Component({
   selector: 'app-game',
@@ -31,21 +33,44 @@ export class GameComponent {
     'top: 78%; left: 0;', 'top: 78%; left: 26%', 'top: 78%; left: 52%;', 'top: 78%; left: 78%;'
   ]
   tileId = 0
-  //tiles = [new TileData(0, 2, 0), new TileData(1, 2, 1), new TileData(2, 2, 2), new TileData(3, 2, 3)]
-  tiles = this.fillTiles()
-    
-  fillTiles() {
-    let array = []
-    for (let i = 0; i < 16; i++) {
-      array.push(new TileData(i, 2, i))
+  tiles: TileData[] = []
+  
+  /*
+    Given a position to search for, find if it is already occupied
+  */
+  findTile(search: number) : boolean {
+    for (let i = 0; i < this.tiles.length; i++) {
+      if (this.tiles[i].positionId == search) {
+        return true
+      }
     }
-    return array
+    return false
+  }
+
+
+  spawnRandomTiles(amount: number) {
+    //create a list of all empty positions
+    let emptyPositions = []
+    for (let i = 0; i < 16; i++) {
+      if (!this.findTile(i)) {
+        emptyPositions.push(i)
+      }
+    }
+
+    //spawn a set amount of tiles
+    for (let i = 0; i < amount; i++) {
+      let chosenIndex = Math.floor(Math.random() * emptyPositions.length)
+      let value = Math.random() < chanceFor4Value ? 4 : 2;
+      this.tiles.push(new TileData(this.tileId++, value, emptyPositions[chosenIndex]))
+      emptyPositions.splice(chosenIndex, 1)
+    }
   }
 
   keyDownHandler(event: KeyboardEvent) {
     let key = event.key
     switch (event.key) {
       case ('ArrowUp'):
+        this.spawnRandomTiles(2)
         event.preventDefault()
         break
       case ('ArrowDown'):
