@@ -1,7 +1,66 @@
 <div class="game-container">
     <div class="game">
+        
         @for (tile of tiles; track tile.id) {
             <app-tile [value]="tile.value" [currentPosition]="possiblePositions[tile.positionId]"/>
         }
+        <div class="cell-grid">
+            <div class="row-container">
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+        
+                </div>
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+                    
+                </div>
+            </div>
+            <div class="row-container">
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+        
+                </div>
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+                    
+                </div>
+            </div>
+            <div class="row-container">
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+        
+                </div>
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+                    
+                </div>
+            </div>
+            <div class="row-container">
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+        
+                </div>
+                <div class="cell">
+                    
+                </div>
+                <div class="cell">
+                    
+                </div>
+            </div>
+        </div>
     </div>
 </div>

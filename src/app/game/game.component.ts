@@ -24,9 +24,23 @@ class TileData {
   styleUrl: './game.component.css',
 })
 export class GameComponent {
-  possiblePositions = ['top: 0; left: 0;', 'top: 0; left: 22.5%;']
+  possiblePositions = [
+    'top: 0; left: 0;', 'top: 0; left: 26%;', 'top: 0; left: 52%;', 'top: 0; left: 78%;',
+    'top: 26%; left: 0;', 'top: 26%; left: 26%', 'top: 26%; left: 52%;', 'top: 26%; left: 78%;',
+    'top: 52%; left: 0;', 'top: 52%; left: 26%', 'top: 52%; left: 52%;', 'top: 52%; left: 78%;',
+    'top: 78%; left: 0;', 'top: 78%; left: 26%', 'top: 78%; left: 52%;', 'top: 78%; left: 78%;'
+  ]
   tileId = 0
-  tiles = [new TileData(0, 2, 0), new TileData(1, 2, 1)]
+  //tiles = [new TileData(0, 2, 0), new TileData(1, 2, 1), new TileData(2, 2, 2), new TileData(3, 2, 3)]
+  tiles = this.fillTiles()
+    
+  fillTiles() {
+    let array = []
+    for (let i = 0; i < 16; i++) {
+      array.push(new TileData(i, 2, i))
+    }
+    return array
+  }
 
   keyDownHandler(event: KeyboardEvent) {
     let key = event.key
