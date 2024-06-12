@@ -1,6 +1,5 @@
 <div class="game-container">
     <div class="game">
-        
         @for (tile of tiles; track tile.id) {
             <app-tile [value]="tile.value" [currentPosition]="possiblePositions[tile.positionId]"/>
         }

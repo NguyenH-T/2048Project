@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { GameComponent } from './game/game.component';
 
@@ -10,5 +10,9 @@ import { GameComponent } from './game/game.component';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
+  @ViewChild(GameComponent) game!: GameComponent
 
+  newGameHandler() {
+    this.game.createNewGame()
+  }
 }
