@@ -1,7 +1,9 @@
 <div class="game-container">
     <div class="game">
         @for (tile of tiles; track tile.id) {
-            <app-tile [value]="tile.value" [currentPosition]="possiblePositions[tile.positionId]"/>
+            @if(tile.value > 0) {
+                <app-tile [value]="tile.value" [currentPosition]="possiblePositions[$index]"/>
+            }
         }
         <div class="cell-grid">
             <div class="row-container">

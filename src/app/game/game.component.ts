@@ -8,13 +8,11 @@ this component controls everything else
 class TileData {
   id: number;
   value: number;
-  positionId: number;
   combined = false
   
-  constructor(_id: number, _value: number, _positionId: number) {
+  constructor(_id: number, _value: number) {
     this.id = _id
     this.value = _value
-    this.positionId = _positionId
   }
 }
 //The chance for a tile to have a value of 4 instead of 2
@@ -22,7 +20,6 @@ const chanceFor4Value = 0.25
 //0 based
 const dimensions = 3
 const tileEquality = (element: TileData) => { return element.id === this }
-const tilePositionEquality = (element: TileData) => { return element.positionId == this }
 const forward = 1, backwards = -1
 
 @Injectable({
@@ -50,7 +47,7 @@ export class GameComponent {
   tileId = 0
   tiles: TileData[] = []
 
-  ngOnInit() {
+  constructor() {
     this.createNewGame()
   }
 
@@ -58,7 +55,7 @@ export class GameComponent {
     //create a list of all empty positions
     let emptyPositions = []
     for (let i = 0; i < 16; i++) {
-      if (this.tiles.findIndex(tileEquality, i) < 0) {
+      if (this.tiles[i].value === 0) {
         emptyPositions.push(i)
       }
     }
@@ -67,7 +64,7 @@ export class GameComponent {
     for (let i = 0; i < amount; i++) {
       let chosenIndex = Math.floor(Math.random() * emptyPositions.length)
       let value = Math.random() < chanceFor4Value ? 4 : 2;
-      this.tiles.push(new TileData(this.tileId++, value, emptyPositions[chosenIndex]))
+      this.tiles[emptyPositions[chosenIndex]] = new TileData(this.tileId++, value)
       emptyPositions.splice(chosenIndex, 1)
     }
   }
@@ -78,37 +75,10 @@ export class GameComponent {
   createNewGame() {
     this.tileId = 0
     this.tiles = []
-    this.spawnRandomTiles(2)
-  }
-
-  moveTilesHorizontal() {
-    //Create copy to avoid mutation
-    let endPoint = this.tiles.map((e) : TileData => { return new TileData(e.id, e.value, e.positionId) })
-    for (let r = 0; r < dimensions; r++) {
-      for (let c = 4 * r + 1; c < dimensions; c++) {
-        for (let s = c - 1; s >= 0; s--) {
-          //Check for the first tile located on the left side of the current tile
-          let firstFound = endPoint.findIndex(tilePositionEquality, s)
-          if (firstFound > 0) {
-            //Check to see if combinable
-            if (endPoint[firstFound].value === endPoint[c].value) {
-              //Combine values. Move both tiles onto the same position. Mark one of them to be deleted.
-              endPoint[firstFound].value += endPoint[c].value
-              endPoint[c].combined = true
-              endPoint[c].positionId = endPoint[firstFound].positionId
-            }
-            else {
-              //Move to the next leftmost position
-              endPoint[c].positionId = s + 1
-            }
-          }
-          else {
-            //if tile is not found then move current tile to that position
-            endPoint[c].positionId = s
-          }
-        }
-      }
+    for (let i = 0; i < 16; i++) {
+      this.tiles.push(new TileData(this.tileId++, 0))
     }
+    this.spawnRandomTiles(2)
   }
 
   keyDownHandler(event: KeyboardEvent) {
