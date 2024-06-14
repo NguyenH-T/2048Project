@@ -92,14 +92,14 @@ export class GameComponent {
         if (endpoint[c].value > 0) {
           //finding the tiles from right -> left
           for (let i = c - increment; i < dimensions * r + dimensions && i >= dimensions * r; i -= increment) { 
-            if ((i == dimensions * r || i == dimensions * r + dimensions - 1) && endpoint[i].value == 0) { //checking if we hit the bounding box
+            if ((i == dimensions * r || i == dimensions * r + dimensions - 1) && endpoint[i].value === 0) { //checking if we hit the bounding box
               let temp = endpoint[i]
               endpoint[i] = endpoint[c]
               endpoint[c] = temp
             }
             else if (endpoint[i].value > 0) { //checking for occupied tile
               //combine the tiles
-              if (endpoint[i].value === endpoint[c].value) {
+              if (endpoint[i].value === endpoint[c].value && !endpoint[i].combined) {
                 endpoint[i].value += endpoint[c].value
                 endpoint[c].value = 0
                 //------------ TODO: add to animation map
@@ -113,7 +113,46 @@ export class GameComponent {
                 //---------- TODO: add to animation map
               }
               //After either option is chosen. Stop moving the current tile.
-              break;
+              break
+            }
+          }
+        }
+      }
+    }
+    this.tiles = endpoint
+  }
+
+  moveTilesVertical(direction: number) {
+    let endpoint: TileData[] = this.tiles.map((e) => { return new TileData(e.id, e.value) })
+    let animations = new Map()
+    //searching top -> bottom
+    for (let c = 0; c < dimensions; c++) {
+      for (let r = (direction > 0) ? 0 : 2; r < dimensions && r >= 0; r += direction) {
+        //looking for occupied tile
+        let search = dimensions * r + c
+        if (endpoint[search].value > 0) {
+          //searching bottom -> top
+          for (let i = search - (dimensions * direction); i >= c && i <= dimensions * 3 + c; i -= (dimensions * direction)) {
+            //found bound
+            if ((i === c || i === 3 * dimensions + c) && endpoint[i].value === 0) {
+              let temp = endpoint[i]
+              endpoint[i] = endpoint[search]
+              endpoint[search] = temp
+            }
+            else if (endpoint[i].value > 0) { //found occupied tile
+              if (endpoint[i].value === endpoint[search].value && !endpoint[i].combined) {
+                endpoint[i].value += endpoint[search].value
+                endpoint[i].combined = true
+                endpoint[search].value = 0
+                //----------------- TODO: Add to animation map
+              }
+              else {
+                let temp = endpoint[i + (dimensions * direction)]
+                endpoint[i + (dimensions * direction)] = endpoint[search]
+                endpoint[search] = temp
+                //--------------------- TODO: Add to animation map
+              }
+              break
             }
           }
         }
@@ -126,9 +165,11 @@ export class GameComponent {
     let key = event.key
     switch (event.key) {
       case ('ArrowUp'):
+        this.moveTilesVertical(1)
         event.preventDefault()
         break
       case ('ArrowDown'):
+        this.moveTilesVertical(-1)
         event.preventDefault()
         break
       case ('ArrowLeft'):
