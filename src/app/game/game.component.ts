@@ -81,18 +81,18 @@ export class GameComponent {
     this.spawnRandomTiles(2)
   }
 
-  moveTileHorizontal() {
+  moveTilesHorizontal(start: number, increment: number) {
     let endpoint: TileData[] = this.tiles.map((e) => { return new TileData(e.id, e.value) })
     let animations = new Map()
     //loop through columns
     for (let r = 0; r < dimensions; r++) {
       //loop through row. Since this is a single dimension array mimicing a 2d array the formula is 4 * row + column
-      for (let c = dimensions * r + 1; c < dimensions * r + dimensions; c++) {
+      for (let c = dimensions * r + start; c < dimensions * r + dimensions && c >= dimensions * r; c += increment) {
         //finding the tiles from left -> right
         if (endpoint[c].value > 0) {
           //finding the tiles from right -> left
-          for (let i = c - 1; i >= dimensions * r; i--) { 
-            if (i == dimensions * r) { //checking if we hit the bounding box
+          for (let i = c - increment; i < dimensions * r + dimensions && i >= dimensions * r; i -= increment) { 
+            if ((i == dimensions * r || i == dimensions * r + dimensions - 1) && endpoint[i].value == 0) { //checking if we hit the bounding box
               let temp = endpoint[i]
               endpoint[i] = endpoint[c]
               endpoint[c] = temp
@@ -101,17 +101,19 @@ export class GameComponent {
               //combine the tiles
               if (endpoint[i].value === endpoint[c].value) {
                 endpoint[i].value += endpoint[c].value
-                endpoint[c] = new TileData(this.tileId, 0)
-                //------------ TODO: add to animation
+                endpoint[c].value = 0
+                //------------ TODO: add to animation map
               }
               else {
                 //can't combine. Then move to the next slot to the right
                 //Empty slots is mock TileData so we can swap them
-                let temp = endpoint[i + 1]
-                endpoint[i + 1] = endpoint[c]
-                endpoint[c] = temp
+                let temp = endpoint[i + increment]
+                endpoint[i + increment] = endpoint[c]
+                endpoint[c] = temp 
                 //---------- TODO: add to animation map
               }
+              //After either option is chosen. Stop moving the current tile.
+              break;
             }
           }
         }
@@ -130,10 +132,11 @@ export class GameComponent {
         event.preventDefault()
         break
       case ('ArrowLeft'):
-        this.moveTileHorizontal()
+        this.moveTilesHorizontal(1, 1)
         event.preventDefault()
         break
       case ('ArrowRight'):
+        this.moveTilesHorizontal(2, -1)
         event.preventDefault()
         break
       case (' '):
