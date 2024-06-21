@@ -2,7 +2,7 @@
     <div class="game">
         @for (tile of tiles; track tile.id) {
             @if(tile.value > 0) {
-                <app-tile [value]="tile.value" [currentPosition]="possiblePositions[$index]"/>
+                <app-tile [id]="tile.id" [value]="tile.value" [animation]="playAnimation.get(tile.id)"/>
             }
         }
         <div class="cell-grid">

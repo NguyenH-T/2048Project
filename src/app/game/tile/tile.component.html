@@ -1,4 +1,4 @@
-<div [style]="currentPosition" class="tile">
+<div [style]="getAnimation()" class="tile" (childAnimationDone)="isWorking()">
     <h1>
         {{value}}
     </h1>
