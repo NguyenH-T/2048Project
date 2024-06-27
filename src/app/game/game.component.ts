@@ -1,40 +1,29 @@
 import { Component, ContentChildren, Injectable, QueryList, ViewChildren } from '@angular/core';
 import { TileComponent } from './tile/tile.component';
+import { PositionIndex } from './tile-movement.component';
 
-export class AnimationData {
-  top: string
-  left: string
-  combined: boolean
-  deleted: boolean
-  distance: number
-
-  constructor(_top: string = '0', _left: string = '0', _distance: number = 0, _combined: boolean = false, _deleted: boolean = false) {
-    this.top = _top
-    this.left = _left
-    this.distance = _distance
-    this.combined = _combined
-    this.deleted = _deleted
-  }
-}
 /*
 This class represents the data for each tile. So TileComponents is only the display and 
 this component controls everything else
 */
 class TileData {
-  id: number;
-  value: number;
+  id: number
+  value: number
+  pos: PositionIndex
+  distance: number = 0
   combined = false
   deleted = false
   
-  constructor(_id: number, _value: number) {
+  constructor(_id: number, _value: number, _pos: PositionIndex) {
     this.id = _id
     this.value = _value
+    this.pos = _pos
   }
 }
 //The chance for a tile to have a value of 4 instead of 2
 const chanceFor4Value = 0.25
 //0 based
-const dimensions = 4
+const dimensions : number = 4
 
 @Injectable({
   providedIn: 'root'
@@ -60,45 +49,48 @@ export class GameComponent {
   ]
   //Unique id for each TileData
   tileId = 0
-  tiles: TileData[] = []
-  playAnimation: Map<number, AnimationData> = new Map()
-  nextFrame: TileData[] = []
+  tiles: Map<number, TileData> = new Map
 
   constructor() {
     this.createNewGame()
   }
 
-  private spawnRandomTiles(amount: number, endpoint: TileData[], animations: Map<number, AnimationData>) {
-    //create a list of all empty positions
-    let emptyPositions = []
-    for (let i = 0; i < 16; i++) {
-      if (endpoint[i].value === 0) {
-        emptyPositions.push(i)
+  private findFilledPositions(tiles: Map<number, TileData>): Set<PositionIndex> {
+    let filledPositions = new Set<PositionIndex>()
+    for (let tile of tiles.values()) {
+      filledPositions.add(tile.pos)
+    }
+    return filledPositions
+  }
+
+  private findEmptyPositions(tiles: Map<number, TileData>) : PositionIndex[] {
+    let filled = this.findFilledPositions(tiles)
+    let emptyPos: PositionIndex[] = []
+
+    for (let i = 0; i < dimensions; i++) {
+      for (let j = 0; j < dimensions; j++) {
+        if (!filled.has({ row: i, col: j })) {
+          emptyPos.push({ row: i, col: j })
+        }
       }
     }
+    return emptyPos
+  }
+
+  private spawnRandomTiles(amount: number, tiles: Map<number, TileData>) {
+    //create a list of all empty positions
+    let emptyPos = this.findEmptyPositions(tiles)
 
     //spawn a set amount of tiles
     for (let i = 0; i < amount; i++) {
-      let chosenEmpty = Math.floor(Math.random() * emptyPositions.length)
+      let chosenEmpty = Math.floor(Math.random() * emptyPos.length)
       let value = Math.random() < chanceFor4Value ? 4 : 2;
-      let chosenIndex = emptyPositions[chosenEmpty]
-      endpoint[chosenIndex] = new TileData(this.tileId++, value)
-
-      let data = new AnimationData(this.possiblePositions[chosenIndex].top, this.possiblePositions[chosenIndex].left,)
-      animations.set(endpoint[chosenIndex].id, data)
-
-      emptyPositions.splice(chosenEmpty, 1)
+      let pos = emptyPos[chosenEmpty]
+      let id = this.tileId++
+      tiles.set(id, new TileData(id, value, pos))
+        
+      emptyPos.splice(chosenEmpty, 1)
     }
-  }
-
-  copyTiles(): TileData[] {
-    let copy: TileData[] = []
-    for (let i = 0; i < this.tiles.length; i++) {
-      if (!this.tiles[i].deleted) {
-        copy.push(this.tiles[i])
-      }
-    }
-    return copy
   }
 
   /*
@@ -106,197 +98,176 @@ export class GameComponent {
   */
   createNewGame() {
     this.tileId = 0
-    this.tiles = []
-    for (let i = 0; i < 16; i++) {
-      this.tiles.push(new TileData(this.tileId++, 0))
-    }
-    let animations =  new Map<number, AnimationData>()
-    this.spawnRandomTiles(2, this.tiles, animations)
-    this.playAnimation = animations
+    this.tiles = new Map<number, TileData>()
+    this.spawnRandomTiles(2, this.tiles)
   }
 
-  private calcCardinalDistance(start: number, end: number) : number{
-    let diff = start - end
-    if (diff === 0) {
-      return diff
+  copyAndFilterTiles() {
+    let copy = new Map<number, TileData>()
+    for (const tile of this.tiles.values()) {
+      if (!tile.deleted) {
+        copy.set(tile.id, tile)
+      }
     }
-    else if (diff % dimensions === 0) {
-      return Math.abs(diff / dimensions)
+    return copy
+  }
+
+  private checkCombine(combiner: TileData | undefined, combinee: TileData | undefined) : boolean {
+    if (combinee !== undefined && combiner !== undefined) {
+      if (combinee.combined = true) {
+        return false
+      }
+      else if (combiner.value === combinee.value) {
+        return true
+      }
     }
-    else if (diff < dimensions) {
-      return Math.abs(diff)
+    return false
+  }
+
+  mapToMatrix(tiles: Map<number, TileData>): number[][] {
+    let matrix : number[][] = new Array(dimensions).fill(new Array(dimensions).fill(-1))
+    for (const tile of tiles.values()) {
+      matrix[tile.pos.row][tile.pos.col] = tile.id
+    }
+    return matrix
+  }
+
+  private getOccupiedSpace(posMap: number[][], row: number, col: number): number[] {
+    let spaces = []
+    if (row - 1 >= 0) {
+      spaces.push(posMap[row - 1][col])
+    }
+    if (row + 1 < dimensions) {
+      spaces.push(posMap[row + 1][col])
+    }
+    if (col - 1 >= 0) {
+      spaces.push(posMap[row][col - 1])
+    }
+    if (col + 1 < dimensions) {
+      spaces.push(posMap[row][col + 1])
+    }
+    return spaces
+  }
+
+  checkValidMove(tiles: Map<number, TileData>, posMap: number[][]) : boolean {
+    for (let i = 0; i < dimensions; i++) {
+      for (let j = 0; j < dimensions; j++) {
+        if (posMap[i][j] >= 0) {
+          let toCheck = this.getOccupiedSpace(posMap, i, j)
+        
+          for (const space of toCheck) {
+            if (space >= 0) { //occupied space
+              if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(space))) { //check if can combine
+                return true
+              }
+            }
+            else { //unoccupied space
+              return true
+            }
+          }
+        }
+      }
+    }
+    return false
+  }
+
+  private moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>) : PositionIndex {
+    if (sCol >= dimensions || sRow >= dimensions || sCol < 0 || sRow < 0) {
+      if (sCol >= dimensions || sCol < 0) {
+        return {row: sRow, col: sCol - iCol}
+      }
+      else {
+        return {row: sRow - iRow, col: sCol}
+      }
     }
     else {
-      return -1
+      let outcome = this.moveTilesRecurse(sRow + iRow, sCol + iCol, iRow, iCol, posMatrix, tiles)
+      if (posMatrix[sRow][sCol] >= 0) { //is occupied slot
+        if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was the bound
+          let data = tiles.get(posMatrix[sRow][sCol])
+          if (data !== undefined) {
+            data.pos= outcome
+          }
+          return { row: sRow, col: sCol }
+        }
+        else {
+          let current = tiles.get(posMatrix[sRow][sCol])
+          let search = tiles.get(posMatrix[outcome.row][outcome.col])
+          if (current !== undefined && search !== undefined) {
+            if (this.checkCombine(current, search)) { //Combinable
+              search.combined = true
+              search.value *= 2
+              current.pos = search.pos
+              current.deleted = true
+              return outcome
+            }
+            else { //not combinable
+              current.pos = search.pos
+              current.pos.col - iCol
+              current.pos.row - iRow
+              return { row: sRow, col: sCol }
+            }
+          }
+        }
+      }
+      return outcome
     }
   }
 
-  moveTilesHorizontal(start: number, increment: number, endpoint: TileData[], animations: Map<number, AnimationData>) : boolean {
-    //loop through columns
-    let changed = false
+  moveTilesHorizontal(sCol: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>) {
     for (let r = 0; r < dimensions; r++) {
-      //loop through row. Since this is a single dimension array mimicing a 2d array the formula is 4 * row + columned
-      for (let c = dimensions * r + start; c < dimensions * r + dimensions && c >= dimensions * r; c += increment) {
-        //finding the tiles from left -> right
-        if (endpoint[c].value > 0) {
-          //finding the tiles from right -> left
-          for (let i = c - increment; i < dimensions * r + dimensions && i >= dimensions * r; i -= increment) { 
-            if ((i == dimensions * r || i == dimensions * r + dimensions - 1) && endpoint[i].value === 0) { //checking if we hit the bounding box
-              let temp = endpoint[i]
-              endpoint[i] = endpoint[c]
-              endpoint[c] = temp
-              changed = true
-
-              let data = new AnimationData(this.possiblePositions[i].top, this.possiblePositions[i].left, this.calcCardinalDistance(c, i))
-              animations.set(endpoint[i].id, data)
-            }
-            else if (endpoint[i].value > 0) { //checking for occupied tile
-              //combine the tiles
-              if (endpoint[i].value === endpoint[c].value && !endpoint[i].combined) {
-                endpoint[i].value += endpoint[c].value
-                endpoint[i].combined = true
-
-                endpoint[c].deleted = true
-                endpoint.push(endpoint[c]) //move the to be deleted tile to the end of the array
-                endpoint[c] = new TileData(this.tileId++, 0) //replace with an empty tile
-                changed = true
-
-                let data: AnimationData | undefined = animations.get(endpoint[i].id)
-                if (data === undefined) {
-                  data = new AnimationData(this.possiblePositions[i].top, this.possiblePositions[i].left, this.calcCardinalDistance(i, c))
-                }
-                data.combined = true
-                animations.set(endpoint[i].id, data)
-
-                data = new AnimationData(this.possiblePositions[i].top, this.possiblePositions[i].left, this.calcCardinalDistance(i, c), false, true)
-                animations.set(endpoint[-1].id, data)
-                //------------ TODO: add to animation map
-              }
-              else {
-                //can't combine. Then move to the next slot to the right
-                //Empty slots is mock TileData so we can swap them
-                let temp = endpoint[i + increment]
-                endpoint[i + increment] = endpoint[c]
-                endpoint[c] = temp 
-                changed = true
-
-                let data = new AnimationData(this.possiblePositions[i + increment].top, this.possiblePositions[i + increment].left, this.calcCardinalDistance(i + increment, c))
-                animations.set(endpoint[i + increment].id, data)
-                //---------- TODO: add to animation map
-              }
-              //After either option is chosen. Stop moving the current tile.
-              break
-            }
-          }
-        }
-      }
+      this.moveTilesRecurse(r, sCol, 0, iCol, posMatrix, tiles)
     }
-    return changed
   }
 
-  moveTilesVertical(direction: number, endpoint: TileData[], animations: Map<number, AnimationData>) : boolean {
-    //searching top -> bottom
-    let changed = false
+  moveTilesVertical(sRow: number, iRow: number, posMatrix: number[][], tiles: Map<number, TileData>) {
     for (let c = 0; c < dimensions; c++) {
-      for (let r = (direction > 0) ? 0 : 2; r < dimensions && r >= 0; r += direction) {
-        //looking for occupied tile
-        let search = dimensions * r + c
-        if (endpoint[search].value > 0) {
-          //searching bottom -> top
-          for (let i = search - (dimensions * direction); i >= c && i <= dimensions * 3 + c; i -= (dimensions * direction)) {
-            //found bound
-            if ((i === c || i === 3 * dimensions + c) && endpoint[i].value === 0) {
-              let temp = endpoint[i]
-              endpoint[i] = endpoint[search]
-              endpoint[search] = temp
-              changed = true
-
-              let data = new AnimationData(this.possiblePositions[i].top, this.possiblePositions[i].left, this.calcCardinalDistance(i, search))
-              animations.set(endpoint[i].id, data)
-            }
-            else if (endpoint[i].value > 0) { //found occupied tile
-              if (endpoint[i].value === endpoint[search].value && !endpoint[i].combined) {
-                endpoint[i].value += endpoint[search].value
-                endpoint[i].combined = true
-
-                endpoint[search].deleted = true
-                endpoint.push(endpoint[search]) //move the to be deleted tile to the end of the array
-                endpoint[search] = new TileData(this.tileId++, 0) //replace with empty tile
-                changed = true
-
-                let data: AnimationData | undefined = animations.get(endpoint[i].id)
-                if (data === undefined) {
-                  data = new AnimationData(this.possiblePositions[i].top, this.possiblePositions[i].left, this.calcCardinalDistance(i, search))
-                }
-                data.combined = true
-                animations.set(endpoint[i].id, data)
-                
-                data = new AnimationData(this.possiblePositions[search].top, this.possiblePositions[search].left, this.calcCardinalDistance(i, search), false, true)
-                animations.set(endpoint[-1].id, data)
-                //----------------- TODO: Add to animation map
-              }
-              else if (endpoint[i + (dimensions * direction)].id !== endpoint[search].id) {
-                let temp = endpoint[i + (dimensions * direction)]
-                let firstEmpty = i + (dimensions * direction)
-                endpoint[firstEmpty] = endpoint[search]
-                endpoint[search] = temp
-                changed = true
-
-                let data = new AnimationData(this.possiblePositions[firstEmpty].top, this.possiblePositions[firstEmpty].left, this.calcCardinalDistance(firstEmpty, search))
-                animations.set(endpoint[firstEmpty].id, data)
-                //--------------------- TODO: Add to animation map
-              }
-              break
-            }
-          }
-        }
-      }
+      this.moveTilesRecurse(sRow, c, iRow, 0, posMatrix, tiles)
     }
-    return changed
-  }
-
-  animationCallback(event: Event) {
-    console.log(event)
   }
 
   keyDownHandler(event: KeyboardEvent) {
-    let endpoint
-    let animations
+    let updatedTiles: Map<number, TileData>
+    let posMatrix: number[][]
     switch (event.key) {
       case ('ArrowUp'):
-        endpoint = this.copyTiles()
-        animations = new Map<number, AnimationData>()
-        if (this.moveTilesVertical(1, endpoint, animations)) {
-          //this.spawnRandomTiles(2, endpoint, animations)
-          this.playAnimation = animations
+        updatedTiles = this.copyAndFilterTiles()
+        posMatrix = this.mapToMatrix(updatedTiles)
+
+        if (this.checkValidMove(updatedTiles, posMatrix)) {
+          this.moveTilesVertical(dimensions - 1, -1, posMatrix, updatedTiles)
         }
+
         event.preventDefault()
         break
       case ('ArrowDown'):
-        endpoint = this.copyTiles()
-        animations = new Map<number, AnimationData>()
-        if (this.moveTilesVertical(-1, endpoint, animations)) {
-          //this.spawnRandomTiles(2, endpoint, animations)
-          this.playAnimation = animations
+        updatedTiles = this.copyAndFilterTiles()
+        posMatrix = this.mapToMatrix(updatedTiles)
+        
+        if (this.checkValidMove(updatedTiles, posMatrix)) {
+          this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
         }
+        
         event.preventDefault()
         break
       case ('ArrowLeft'): 
-        endpoint = this.copyTiles()
-        animations = new Map<number, AnimationData>()
-        if (this.moveTilesHorizontal(1, 1, endpoint, animations)) {
-          //this.spawnRandomTiles(2, endpoint, animations)
-          this.playAnimation = animations
+        updatedTiles = this.copyAndFilterTiles()
+        posMatrix = this.mapToMatrix(updatedTiles)
+
+        if (this.checkValidMove(updatedTiles, posMatrix)) {
+          this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
         }
+
         event.preventDefault()
         break
       case ('ArrowRight'):
-        endpoint = this.copyTiles()
-        animations = new Map<number, AnimationData>()
-        if (this.moveTilesHorizontal(2, -1, endpoint, animations)) {
-          //this.spawnRandomTiles(2, endpoint, animations)
-          this.playAnimation = animations
+        updatedTiles = this.copyAndFilterTiles()
+        posMatrix = this.mapToMatrix(updatedTiles)
+        
+        if (this.checkValidMove(updatedTiles, posMatrix)) {
+          this.moveTilesHorizontal(dimensions - 1, -1, posMatrix, updatedTiles)
         }
+
         event.preventDefault()
         break
     }

@@ -1,8 +1,8 @@
 <div class="game-container">
     <div class="game">
-        @for (tile of tiles; track tile.id) {
+        @for (tile of tiles.values(); track tile.id) {
             @if(tile.value > 0) {
-                <app-tile [id]="tile.id" [value]="tile.value" [animation]="playAnimation.get(tile.id)"/>
+                <app-tile [id]="tile.id" [value]="tile.value" [animation]="playAnimation.get(tile.id)" (childAnimationDone)="animationCallback($event)"/>
             }
         }
         <div class="cell-grid">

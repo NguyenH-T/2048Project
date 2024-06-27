@@ -30,11 +30,10 @@ export class TileComponent {
   getAnimation() {
     let cssAnimation = 'transform: translate(' + this.left + ', ' + this.top + ');'
     cssAnimation += 'transition-duration: ' + this.time + 's;'
-    this.childAnimationDone.emit({id: this.id})
     return cssAnimation
   }
 
-  isWorking() {
-    console.log('yep')
+  transitionEndHandler() {
+    this.childAnimationDone.emit({id: this.id})
   }
 }

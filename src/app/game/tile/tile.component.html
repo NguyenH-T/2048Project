@@ -1,4 +1,4 @@
-<div [style]="getAnimation()" class="tile" (childAnimationDone)="isWorking()">
+<div [style]="getAnimation()" class="tile" (transitionend)="transitionEndHandler()">
     <h1>
         {{value}}
     </h1>
