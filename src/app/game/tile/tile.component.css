@@ -12,4 +12,6 @@ h1{
     height: 22%;
     background-color: #c2c2c0;
     transition-property: all;
+    transition-duration: 100ms;
+    z-index: 1;
 }

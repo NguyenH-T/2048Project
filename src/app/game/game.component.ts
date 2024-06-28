@@ -1,4 +1,4 @@
-import { Component, ContentChildren, Injectable, QueryList, ViewChildren } from '@angular/core';
+import { Component, EventEmitter, Injectable, Output } from '@angular/core';
 import { TileComponent } from './tile/tile.component';
 import { PositionIndex } from './tile-movement.component';
 
@@ -40,19 +40,14 @@ const dimensions : number = 4
   styleUrl: './game.component.css',
 })
 export class GameComponent {
-  //Const of all positions in the grid
-  possiblePositions = [
-    { top: '0', left: '0' }, { top: '0', left: '118%' }, { top: '0', left: '236%' }, { top: '0', left: '354.5%' },
-    { top: '118%', left: '0' }, { top: '118%', left: '118%' }, { top: '118%', left: '236%' }, { top: '118%', left: '354.5%' },
-    { top: '236%', left: '0' }, { top: '236 %', left: '118%' }, { top: '236%', left: '236%' }, { top: '236%', left: '354.5%' },
-    { top: '354.5%', left: '0' }, { top: '354.5%', left: '118%' }, { top: '354.5%', left: '236%' }, { top: '354.5%', left: '354.5%' }
-  ]
   //Unique id for each TileData
   tileId = 0
-  tiles: Map<number, TileData> = new Map
+  tiles: Map<number, TileData>
 
   constructor() {
-    this.createNewGame()
+    let newTiles = new Map<number, TileData>()
+    this.spawnRandomTiles(2, newTiles)
+    this.tiles = newTiles
   }
 
   private findFilledPositions(tiles: Map<number, TileData>): Set<PositionIndex> {
@@ -88,6 +83,7 @@ export class GameComponent {
       let pos = emptyPos[chosenEmpty]
       let id = this.tileId++
       tiles.set(id, new TileData(id, value, pos))
+      console.log("spawned at: ", pos)
         
       emptyPos.splice(chosenEmpty, 1)
     }
@@ -96,16 +92,32 @@ export class GameComponent {
   /*
   Empty Tiles. Spawn 2 new tiles
   */
-  createNewGame() {
-    this.tileId = 0
-    this.tiles = new Map<number, TileData>()
-    this.spawnRandomTiles(2, this.tiles)
+  // createNewGame() {
+  //   this.tileId = 0
+  //   let newTiles = new Map<number, TileData>()
+  //   this.spawnRandomTiles(2, newTiles)
+  //   this.tiles = newTiles
+  // }
+
+  printTiles(tiles: Map<number, TileData>): string {
+    let output = ""
+    for (let tile of tiles.values()) {
+      output += "id: " + tile.id + "\n"
+      output += "value: " + tile.value + "\n"
+      output += "pos: [" + tile.pos.row + ", " + tile.pos.col + "] \n"
+      output += "combined: " + tile.combined + "\n"
+      output += "deleted: " + tile.deleted + "\n"
+      output += "distance: " + tile.distance + "\n"
+      output += "-----------------------------------------------------------\n"
+    }
+    return output
   }
 
   copyAndFilterTiles() {
     let copy = new Map<number, TileData>()
-    for (const tile of this.tiles.values()) {
+    for (let tile of this.tiles.values()) {
       if (!tile.deleted) {
+        tile.combined = false
         copy.set(tile.id, tile)
       }
     }
@@ -114,10 +126,13 @@ export class GameComponent {
 
   private checkCombine(combiner: TileData | undefined, combinee: TileData | undefined) : boolean {
     if (combinee !== undefined && combiner !== undefined) {
-      if (combinee.combined = true) {
+      console.log("combinee: ", combinee.value, ", combiner: ", combiner.value)
+      if (combinee.combined === true) {
+        console.log("because combined = true")
         return false
       }
-      else if (combiner.value === combinee.value) {
+      else if (combiner.id !== combinee.id && combiner.value === combinee.value) {
+        console.log('because items are the same value')
         return true
       }
     }
@@ -125,8 +140,12 @@ export class GameComponent {
   }
 
   mapToMatrix(tiles: Map<number, TileData>): number[][] {
-    let matrix : number[][] = new Array(dimensions).fill(new Array(dimensions).fill(-1))
-    for (const tile of tiles.values()) {
+    let matrix: number[][] = new Array(dimensions)
+    for (let i = 0; i < matrix.length; i++) {
+      matrix[i] = new Array(dimensions).fill(-1)
+    }
+    
+    for (let tile of tiles.values()) {
       matrix[tile.pos.row][tile.pos.col] = tile.id
     }
     return matrix
@@ -155,7 +174,7 @@ export class GameComponent {
         if (posMap[i][j] >= 0) {
           let toCheck = this.getOccupiedSpace(posMap, i, j)
         
-          for (const space of toCheck) {
+          for (let space of toCheck) {
             if (space >= 0) { //occupied space
               if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(space))) { //check if can combine
                 return true
@@ -171,23 +190,29 @@ export class GameComponent {
     return false
   }
 
-  private moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>) : PositionIndex {
+  private moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): PositionIndex {
+    console.log("looking at: ", sRow, sCol)
     if (sCol >= dimensions || sRow >= dimensions || sCol < 0 || sRow < 0) {
       if (sCol >= dimensions || sCol < 0) {
+        console.log("hit horizontal bounds")
         return {row: sRow, col: sCol - iCol}
       }
       else {
+        console.log("hit vertical bounds")
         return {row: sRow - iRow, col: sCol}
       }
     }
     else {
       let outcome = this.moveTilesRecurse(sRow + iRow, sCol + iCol, iRow, iCol, posMatrix, tiles)
-      if (posMatrix[sRow][sCol] >= 0) { //is occupied slot
+      console.log(outcome)
+      if (posMatrix[sRow][sCol] >= 0) { //current is occupied slot
+        console.log("recursed to occupied")
         if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was the bound
           let data = tiles.get(posMatrix[sRow][sCol])
           if (data !== undefined) {
-            data.pos= outcome
+            data.pos = outcome
           }
+          console.log("tile moved from " + "{" + sRow + ", " + sCol + "} -> " + "{" + data!.pos.row + ", " + data!.pos.col + "}")
           return { row: sRow, col: sCol }
         }
         else {
@@ -195,21 +220,26 @@ export class GameComponent {
           let search = tiles.get(posMatrix[outcome.row][outcome.col])
           if (current !== undefined && search !== undefined) {
             if (this.checkCombine(current, search)) { //Combinable
+              console.log('combinable')
+              console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
               search.combined = true
               search.value *= 2
-              current.pos = search.pos
+              current.pos.row = search.pos.row
+              current.pos.col = search.pos.col
               current.deleted = true
               return outcome
             }
-            else { //not combinable
-              current.pos = search.pos
-              current.pos.col - iCol
-              current.pos.row - iRow
+            else if(current.id !== search.id) { //not combinable
+              console.log("not combinable")
+              console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
+              current.pos.row = search.pos.row - iRow
+              current.pos.col = search.pos.col - iCol
               return { row: sRow, col: sCol }
             }
           }
         }
       }
+      console.log("propogate")
       return outcome
     }
   }
@@ -236,6 +266,8 @@ export class GameComponent {
 
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesVertical(dimensions - 1, -1, posMatrix, updatedTiles)
+          this.spawnRandomTiles(2, updatedTiles)
+          this.tiles = updatedTiles
         }
 
         event.preventDefault()
@@ -246,6 +278,8 @@ export class GameComponent {
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
+          this.spawnRandomTiles(2, updatedTiles)
+          this.tiles = updatedTiles
         }
         
         event.preventDefault()
@@ -254,8 +288,12 @@ export class GameComponent {
         updatedTiles = this.copyAndFilterTiles()
         posMatrix = this.mapToMatrix(updatedTiles)
 
+        console.log(posMatrix.toString())
+
         if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
+          this.moveTilesHorizontal(dimensions - 1, -1, posMatrix, updatedTiles)
+          this.spawnRandomTiles(2, updatedTiles)
+          this.tiles = updatedTiles
         }
 
         event.preventDefault()
@@ -265,7 +303,9 @@ export class GameComponent {
         posMatrix = this.mapToMatrix(updatedTiles)
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesHorizontal(dimensions - 1, -1, posMatrix, updatedTiles)
+          this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
+          this.spawnRandomTiles(2, updatedTiles)
+          this.tiles = updatedTiles
         }
 
         event.preventDefault()

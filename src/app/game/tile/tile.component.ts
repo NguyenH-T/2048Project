@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output, numberAttribute } from '@angular/core';
-import { AnimationData } from '../game.component';
+import { Component, EventEmitter, Input, Output, SimpleChanges, inject, numberAttribute } from '@angular/core';
+import { PositionIndex, TileMovementService } from '../tile-movement.component';
 
 const speed : number = 30
 
@@ -11,29 +11,20 @@ const speed : number = 30
   styleUrl: './tile.component.css',
 })
 export class TileComponent {
-  @Input({ required: true }) id : number = -1
-  @Input({ required: true, transform: numberAttribute }) value = 0
-  @Input({ required: true }) animation: AnimationData | undefined = new AnimationData()
-  @Output() childAnimationDone = new EventEmitter()
-  top : string = '0'
-  left : string = '0'
-  time = 50
-
-  ngOnChanges() {
-    if (this.animation !== undefined) {
-      this.top = this.animation.top
-      this.left = this.animation.left
-      this.time = this.animation.distance / speed 
-    }
-  }
+  @Input({ required: true }) id: number = -1
+  @Input({ required: true, transform: numberAttribute }) value : number = 0
+  @Input({ required: true }) pos : PositionIndex = { row: 0, col: 0 }
+  @Input({ required: true }) travelDist: number = 0
+  @Input({ required: true }) combined: boolean = false
+  @Input({ required: true }) deleted: boolean = false
+  private tileMovementService = inject(TileMovementService)
 
   getAnimation() {
-    let cssAnimation = 'transform: translate(' + this.left + ', ' + this.top + ');'
-    cssAnimation += 'transition-duration: ' + this.time + 's;'
-    return cssAnimation
-  }
-
-  transitionEndHandler() {
-    this.childAnimationDone.emit({id: this.id})
+    let stringPos = this.tileMovementService.getPosition(this.pos)
+    return {
+      transform: 'translate(' + stringPos.left + ", " + stringPos.top + ')',
+      zIndex: this.deleted ? '0' : '1',
+      opacity: '1'
+    }
   }
 }
