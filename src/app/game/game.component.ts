@@ -6,7 +6,7 @@ import { PositionIndex } from './tile-movement.component';
 This class represents the data for each tile. So TileComponents is only the display and 
 this component controls everything else
 */
-class TileData {
+export class TileData {
   id: number
   value: number
   pos: PositionIndex
@@ -83,7 +83,7 @@ export class GameComponent {
       let pos = emptyPos[chosenEmpty]
       let id = this.tileId++
       tiles.set(id, new TileData(id, value, pos))
-      console.log("spawned at: ", pos)
+      // console.log("spawned at: ", pos)
         
       emptyPos.splice(chosenEmpty, 1)
     }
@@ -126,13 +126,13 @@ export class GameComponent {
 
   private checkCombine(combiner: TileData | undefined, combinee: TileData | undefined) : boolean {
     if (combinee !== undefined && combiner !== undefined) {
-      console.log("combinee: ", combinee.value, ", combiner: ", combiner.value)
+      // console.log("combinee: ", combinee.value, ", combiner: ", combiner.value)
       if (combinee.combined === true) {
-        console.log("because combined = true")
+        // console.log("because combined = true")
         return false
       }
       else if (combiner.id !== combinee.id && combiner.value === combinee.value) {
-        console.log('because items are the same value')
+        // console.log('because items are the same value')
         return true
       }
     }
@@ -190,29 +190,29 @@ export class GameComponent {
     return false
   }
 
-  private moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): PositionIndex {
+  moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): PositionIndex {
     console.log("looking at: ", sRow, sCol)
     if (sCol >= dimensions || sRow >= dimensions || sCol < 0 || sRow < 0) {
       if (sCol >= dimensions || sCol < 0) {
-        console.log("hit horizontal bounds")
+        // console.log("hit horizontal bounds")
         return {row: sRow, col: sCol - iCol}
       }
       else {
-        console.log("hit vertical bounds")
+        // console.log("hit vertical bounds")
         return {row: sRow - iRow, col: sCol}
       }
     }
     else {
       let outcome = this.moveTilesRecurse(sRow + iRow, sCol + iCol, iRow, iCol, posMatrix, tiles)
-      console.log(outcome)
+      // console.log(outcome)
       if (posMatrix[sRow][sCol] >= 0) { //current is occupied slot
-        console.log("recursed to occupied")
+        // console.log("recursed to occupied")
         if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was the bound
           let data = tiles.get(posMatrix[sRow][sCol])
           if (data !== undefined) {
             data.pos = outcome
           }
-          console.log("tile moved from " + "{" + sRow + ", " + sCol + "} -> " + "{" + data!.pos.row + ", " + data!.pos.col + "}")
+          // console.log("tile moved from " + "{" + sRow + ", " + sCol + "} -> " + "{" + data!.pos.row + ", " + data!.pos.col + "}")
           return { row: sRow, col: sCol }
         }
         else {
@@ -220,8 +220,8 @@ export class GameComponent {
           let search = tiles.get(posMatrix[outcome.row][outcome.col])
           if (current !== undefined && search !== undefined) {
             if (this.checkCombine(current, search)) { //Combinable
-              console.log('combinable')
-              console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
+              // console.log('combinable')
+              // console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
               search.combined = true
               search.value *= 2
               current.pos.row = search.pos.row
@@ -230,8 +230,8 @@ export class GameComponent {
               return outcome
             }
             else if(current.id !== search.id) { //not combinable
-              console.log("not combinable")
-              console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
+              // console.log("not combinable")
+              // console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
               current.pos.row = search.pos.row - iRow
               current.pos.col = search.pos.col - iCol
               return { row: sRow, col: sCol }
@@ -239,7 +239,7 @@ export class GameComponent {
           }
         }
       }
-      console.log("propogate")
+      // console.log("propogate")
       return outcome
     }
   }
