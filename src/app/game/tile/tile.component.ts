@@ -24,7 +24,6 @@ export class TileComponent {
     return {
       transform: 'translate(' + stringPos.left + ", " + stringPos.top + ')',
       zIndex: this.deleted ? '0' : '1',
-      opacity: '1'
     }
   }
 }
