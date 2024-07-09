@@ -10,7 +10,7 @@ describe('GameComponent', () => {
     await TestBed.configureTestingModule({
       imports: [GameComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(GameComponent);
     component = fixture.componentInstance;
@@ -20,6 +20,37 @@ describe('GameComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('#copyAndFilterTiles removes deleted', () => {
+    const comp = new GameComponent()
+    let tiles = new Map<number, TileData>()
+    tiles.set(1, new TileData(1, 2, { row: 0, col: 2 }))
+    
+    const t2 = new TileData(2, 2, { row: 0, col: 3 })
+    t2.deleted = true
+    tiles.set(2, t2)
+
+    const t3 = new TileData(3, 4, { row: 0, col: 3 })
+    t3.combined = true
+    tiles.set(3, t3)
+
+    const out = comp.copyAndFilterTiles(tiles)
+
+    const expected = new Map<number, TileData>()
+    expected.set(1, new TileData(1, 2, { row: 0, col: 2 }))
+    expected.set(3, new TileData(3, 4, { row: 0, col: 3 }))
+
+    expect(out).toEqual(expected)
+  })
+
+  it('#copyAndFilterTiles removes nothing', () => {
+    const comp = new GameComponent()
+    let tiles = new Map<number, TileData>()
+    
+    const out = comp.copyAndFilterTiles(tiles)
+    
+    expect(out.size).toEqual(0)
+  })
 
   it('#moveTilesHorizontal move all tiles from left bound to right bound', () => {
     const comp = new GameComponent()
@@ -249,7 +280,6 @@ describe('GameComponent', () => {
 
     expect(tiles.get(1)!.combined).toBeTrue()
     expect(tiles.get(2)!.deleted).toBeTrue()
-
   })
 
   it('Combine after combinee was moved up', () => {
@@ -265,6 +295,140 @@ describe('GameComponent', () => {
 
     expect(tiles.get(2)!.combined).toBeTrue()
     expect(tiles.get(1)!.deleted).toBeTrue()
+  })
 
+  it('Non combine after combine', () => {
+    const comp = new GameComponent()
+    const matrix = [[1, -1, 2, 3], [-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1]]
+    let tiles = new Map<number, TileData>()
+    tiles.set(1, new TileData(1, 4, { row: 0, col: 0 }))
+    tiles.set(2, new TileData(2, 2, { row: 0, col: 2 }))
+    tiles.set(3, new TileData(3, 2, { row: 0, col: 3 }))
+    comp.moveTilesHorizontal(0, 1, matrix, tiles)
+    
+    const expected = new Map<number, TileData>()
+    expected.set(1, new TileData(1, 4, { row: 0, col: 2 }))
+
+    const tile2 = new TileData(2, 2, { row: 0, col: 3 })
+    tile2.deleted = true
+    expected.set(2, tile2)
+
+    const tile3 = new TileData(3, 4, {row: 0, col: 3 })
+    tile3.combined = true
+    expected.set(3, tile3)
+    
+    expect(tiles).withContext('cannot combine with a tile that has already combined in the current movement').toEqual(expected)
+  })
+
+  it('Combine after non combine', () => {
+    const comp = new GameComponent()
+    const matrix = [[1, -1, -1, -1], [2, -1, -1, -1], [3, -1, -1, -1], [-1, -1, -1, -1]]
+    let tiles = new Map<number, TileData>()
+    tiles.set(1, new TileData(1, 2, { row: 0, col: 0 }))
+    tiles.set(2, new TileData(2, 2, { row: 1, col: 0 }))
+    tiles.set(3, new TileData(3, 4, { row: 2, col: 0 }))
+    comp.moveTilesVertical(0, 1, matrix, tiles)
+    
+    const expected = new Map < number, TileData>()
+    
+    const t1 = new TileData(1, 2, { row: 2, col: 0 })
+    t1.deleted = true
+
+    const t2 = new TileData(2, 4, { row: 2, col: 0 })
+    t2.combined = true
+
+    const t3 = new TileData(3, 4, { row: 3, col: 0 })
+
+    expected.set(1, t1)
+    expected.set(2, t2)
+    expected.set(3, t3)
+    
+    expect(tiles).withContext('cannot combine due to already combining this movement').toEqual(expected)
+  })
+
+  it('no movement', () => {
+    const comp = new GameComponent()
+    const matrix = [[1, -1, -1, -1], [2, -1, -1, -1], [3, -1, -1, -1], [4, -1, -1, -1]]
+    let tiles = new Map<number, TileData>()
+    tiles.set(1, new TileData(1, 2, { row: 0, col: 0 }))
+    tiles.set(2, new TileData(2, 4, { row: 1, col: 0 }))
+    tiles.set(3, new TileData(3, 8, { row: 2, col: 0 }))
+    tiles.set(4, new TileData(4, 16, { row: 3, col: 0 }))
+    comp.moveTilesVertical(3, -1, matrix, tiles)
+    
+    let expected = new Map<number, TileData>()
+    
+    expected.set(1, new TileData(1, 2, { row: 0, col: 0 }))
+    expected.set(2, new TileData(2, 4, { row: 1, col: 0 }))
+    expected.set(3, new TileData(3, 8, { row: 2, col: 0 }))
+    expected.set(4, new TileData(4, 16, { row: 3, col: 0 }))
+
+    expect(tiles).toEqual(expected)
+  })
+
+  it('combine favours the direction of movement', () => {
+    const comp = new GameComponent()
+    const matrix = [[1, -1, -1, -1], [2, -1, -1, -1], [3, -1, -1, -1], [4, -1, -1, -1]]
+    let tiles = new Map<number, TileData>()
+    tiles.set(1, new TileData(1, 2, { row: 0, col: 0 }))
+    tiles.set(2, new TileData(2, 2, { row: 1, col: 0 }))
+    tiles.set(3, new TileData(3, 2, { row: 2, col: 0 }))
+    tiles.set(4, new TileData(4, 4, { row: 3, col: 0 }))
+    comp.moveTilesVertical(0, 1, matrix, tiles)
+    
+    const expected = new Map<number, TileData>()
+    
+    const t1 = new TileData(1, 2, { row: 1, col: 0 })
+    
+    const t2 = new TileData(2, 2, { row: 2, col: 0 })
+    t2.deleted = true
+    
+    const t3 = new TileData(3, 4, { row: 2, col: 0 })
+    t3.combined = true
+
+    const t4 = new TileData(4, 4, { row: 3, col: 0 })
+
+    expected.set(1, t1)
+    expected.set(2, t2)
+    expected.set(3, t3)
+    expected.set(4, t4)
+
+    expect(tiles).toEqual(expected)
+  })
+
+  it('Dual combine in same section', () => {
+    const comp = new GameComponent()
+    const matrix = [[1, 2, 3, 4], [-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1]]
+    let tiles = new Map<number, TileData>()
+    tiles.set(1, new TileData(1, 2, { row: 0, col: 0 }))
+    tiles.set(2, new TileData(2, 2, { row: 0, col: 1 }))
+    tiles.set(3, new TileData(3, 2, { row: 0, col: 2 }))
+    tiles.set(4, new TileData(4, 2, { row: 0, col: 3 }))
+    comp.moveTilesHorizontal(0, 1, matrix, tiles)
+    
+    const expected = new Map<number, TileData>()
+
+    const tile1 = new TileData(1, 2, { row: 0, col: 2 })
+    tile1.deleted = true
+
+    const tile2 = new TileData(2, 4, { row: 0, col: 2 })
+    tile2.combined = true
+
+    const tile3 = new TileData(3, 2, { row: 0, col: 3 })
+    tile3.deleted = true
+
+    const tile4 = new TileData(4, 4, { row: 0, col: 3 })
+    tile4.combined = true
+
+    expected.set(1, tile1)
+    expected.set(2, tile2)
+    expected.set(3, tile3)
+    expected.set(4, tile4)
+
+    for (let tile of tiles.values()) {
+      console.log(tile)
+    }
+    
+    expect(tiles).withContext('there should be two adjacent 4 tiles in this').toEqual(expected)
   })
 });

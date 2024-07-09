@@ -113,9 +113,9 @@ export class GameComponent {
     return output
   }
 
-  copyAndFilterTiles() {
+  copyAndFilterTiles(tiles: Map<number, TileData>) {
     let copy = new Map<number, TileData>()
-    for (let tile of this.tiles.values()) {
+    for (let tile of tiles.values()) {
       if (!tile.deleted) {
         tile.combined = false
         copy.set(tile.id, tile)
@@ -191,7 +191,7 @@ export class GameComponent {
   }
 
   moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): PositionIndex {
-    console.log("looking at: ", sRow, sCol)
+    // console.log("looking at: ", sRow, sCol)
     if (sCol >= dimensions || sRow >= dimensions || sCol < 0 || sRow < 0) {
       if (sCol >= dimensions || sCol < 0) {
         // console.log("hit horizontal bounds")
@@ -204,10 +204,11 @@ export class GameComponent {
     }
     else {
       let outcome = this.moveTilesRecurse(sRow + iRow, sCol + iCol, iRow, iCol, posMatrix, tiles)
-      // console.log(outcome)
+      // console.log("outcome was: ", outcome)
+      // console.log('current is: ', {row: sRow, col: sCol})
       if (posMatrix[sRow][sCol] >= 0) { //current is occupied slot
         // console.log("recursed to occupied")
-        if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was the bound
+        if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was an empty slot
           let data = tiles.get(posMatrix[sRow][sCol])
           if (data !== undefined) {
             data.pos = outcome
@@ -231,7 +232,7 @@ export class GameComponent {
             }
             else if(current.id !== search.id) { //not combinable
               // console.log("not combinable")
-              // console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
+              // console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + (search.pos.row - iRow) + ", " + (search.pos.col - iCol) + "}")
               current.pos.row = search.pos.row - iRow
               current.pos.col = search.pos.col - iCol
               return { row: sRow, col: sCol }
@@ -261,7 +262,7 @@ export class GameComponent {
     let posMatrix: number[][]
     switch (event.key) {
       case ('ArrowUp'):
-        updatedTiles = this.copyAndFilterTiles()
+        updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
 
         if (this.checkValidMove(updatedTiles, posMatrix)) {
@@ -273,7 +274,7 @@ export class GameComponent {
         event.preventDefault()
         break
       case ('ArrowDown'):
-        updatedTiles = this.copyAndFilterTiles()
+        updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
@@ -285,7 +286,7 @@ export class GameComponent {
         event.preventDefault()
         break
       case ('ArrowLeft'): 
-        updatedTiles = this.copyAndFilterTiles()
+        updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
 
         console.log(posMatrix.toString())
@@ -299,7 +300,7 @@ export class GameComponent {
         event.preventDefault()
         break
       case ('ArrowRight'):
-        updatedTiles = this.copyAndFilterTiles()
+        updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
