@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GameComponent, TileData } from './game.component';
+import { DIMENSIONS, GameComponent, TileData } from './game.component';
+import { PositionIndex } from './tile-movement.component';
 
 describe('GameComponent', () => {
   let component: GameComponent;
@@ -50,6 +51,94 @@ describe('GameComponent', () => {
     const out = comp.copyAndFilterTiles(tiles)
     
     expect(out.size).toEqual(0)
+  })
+
+  it('#findEmptyPositions with only 1 empty', () => { 
+    const comp = new GameComponent()
+    let tiles = new Map<number, TileData>()
+    let count = 0
+    const totalTiles = 15
+
+    for (let i = 0; i < DIMENSIONS && count < totalTiles; i++) {
+      for (let j = 0; j < DIMENSIONS && count < totalTiles; j++) {
+        tiles.set(count, new TileData(count++, 2, { row: i, col: j }))
+      }
+    }
+
+    let out = comp.findEmptyPositions(tiles)
+
+    const expected = [{ row: 3, col: 3 }]
+    expect(out).toEqual(expected)
+  })
+
+  it('#findEmptyPositions with all empty', () => {
+    const comp = new GameComponent()
+    let tiles = new Map<number, TileData>()
+
+    const out = comp.findEmptyPositions(tiles)
+
+    const expected : PositionIndex[] = []
+    for (let i = 0; i < DIMENSIONS; i++) {
+      for (let j = 0; j < DIMENSIONS; j++) {
+        expected.push({row: i, col: j})
+      }
+    }
+
+    expect(out).toEqual(expected)
+  })
+
+  it('#findEmptyPositions with filled Tiles', () => {
+    const comp = new GameComponent()
+    let tiles = new Map<number, TileData>()
+    let count = 0
+
+    for (let i = 0; i < DIMENSIONS; i++) {
+      for (let j = 0; j < DIMENSIONS; j++) {
+        tiles.set(count, new TileData(count++, 2, { row: i, col: j }))
+      }
+    }
+
+    let out = comp.findEmptyPositions(tiles)
+
+    expect(out.length).toEqual(0)
+  })
+
+  it('#spawnRandomTiles spawns 2 tiles', () => {
+    const comp = new GameComponent()
+
+    const iterations = 1000
+    
+    let tiles = new Map<number, TileData>()
+    for (let i = 0; i < iterations; i++) {
+      comp.spawnRandomTiles(2, tiles, comp.tileId)
+      expect(tiles.size).toEqual(2)
+    
+      const items = []
+      for (let tile of tiles.values()) {
+        items.push(tile)
+      }
+
+      expect(items[0].pos.row == items[1].pos.row && items[0].pos.col == items[1].pos.col).withContext('the tiles are not on the same space').toBeFalse()
+      tiles.clear()
+    }
+  })
+
+  it('#spawnRandomTiles spawns more then available slots', () => {
+    const comp = new GameComponent()
+    let tiles = new Map<number, TileData>()
+    const limit = 15
+    let count = 0
+
+    for (let i = 0; i < DIMENSIONS && count < limit; i++) {
+      for (let j = 0; j < DIMENSIONS && count < limit; j++) {
+        tiles.set(count, new TileData(count++, 2, { row: i, col: j }))
+      }
+    }
+
+    comp.spawnRandomTiles(2, tiles, count)
+    
+    expect(tiles.size).toEqual(16)
+    expect(tiles.get(15) !== undefined).withContext('The only empty tile is spawned').toBeTrue()
   })
 
   it('#moveTilesHorizontal move all tiles from left bound to right bound', () => {
@@ -231,7 +320,6 @@ describe('GameComponent', () => {
     tiles.set(2, new TileData(2, 2, { row: 3, col: 0 }))
     comp.moveTilesVertical(0, 1, matrix, tiles)
     
-    console.log(tiles.get(1)!)
     expect(tiles.get(1)!.pos).toEqual({row: 2, col: 0})
     expect(tiles.get(1)!.combined).toBeFalse()
     expect(tiles.get(1)!.deleted).toBeFalse()
@@ -424,10 +512,6 @@ describe('GameComponent', () => {
     expected.set(2, tile2)
     expected.set(3, tile3)
     expected.set(4, tile4)
-
-    for (let tile of tiles.values()) {
-      console.log(tile)
-    }
     
     expect(tiles).withContext('there should be two adjacent 4 tiles in this').toEqual(expected)
   })

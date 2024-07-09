@@ -23,7 +23,7 @@ export class TileData {
 //The chance for a tile to have a value of 4 instead of 2
 const chanceFor4Value = 0.25
 //0 based
-const dimensions : number = 4
+export const DIMENSIONS : number = 4
 
 @Injectable({
   providedIn: 'root'
@@ -42,75 +42,57 @@ const dimensions : number = 4
 export class GameComponent {
   //Unique id for each TileData
   tileId = 0
-  tiles: Map<number, TileData>
+  tiles: Map<number, TileData> = new Map<number, TileData>()
 
   constructor() {
-    let newTiles = new Map<number, TileData>()
-    this.spawnRandomTiles(2, newTiles)
-    this.tiles = newTiles
+    this.tileId = this.spawnRandomTiles(2, this.tiles, this.tileId)
   }
 
-  private findFilledPositions(tiles: Map<number, TileData>): Set<PositionIndex> {
-    let filledPositions = new Set<PositionIndex>()
-    for (let tile of tiles.values()) {
-      filledPositions.add(tile.pos)
-    }
-    return filledPositions
-  }
-
-  private findEmptyPositions(tiles: Map<number, TileData>) : PositionIndex[] {
-    let filled = this.findFilledPositions(tiles)
+  findEmptyPositions(tiles: Map<number, TileData>) : PositionIndex[] {
     let emptyPos: PositionIndex[] = []
 
-    for (let i = 0; i < dimensions; i++) {
-      for (let j = 0; j < dimensions; j++) {
-        if (!filled.has({ row: i, col: j })) {
-          emptyPos.push({ row: i, col: j })
+    for (let i = 0; i < DIMENSIONS; i++) {
+      for (let j = 0; j < DIMENSIONS; j++) {
+        let found = false
+        for (let tile of tiles.values()) {
+          if (tile.pos.row === i && tile.pos.col === j) {
+            found = true
+            break
+          }
+        } 
+        if (!found) {
+          emptyPos.push({row: i, col: j})
         }
       }
     }
     return emptyPos
   }
 
-  private spawnRandomTiles(amount: number, tiles: Map<number, TileData>) {
+  spawnRandomTiles(amount: number, tiles: Map<number, TileData>, id: number) : number {
     //create a list of all empty positions
     let emptyPos = this.findEmptyPositions(tiles)
 
     //spawn a set amount of tiles
-    for (let i = 0; i < amount; i++) {
+    for (let i = 0; i < amount && emptyPos.length > 0; i++) {
       let chosenEmpty = Math.floor(Math.random() * emptyPos.length)
       let value = Math.random() < chanceFor4Value ? 4 : 2;
       let pos = emptyPos[chosenEmpty]
-      let id = this.tileId++
-      tiles.set(id, new TileData(id, value, pos))
+      tiles.set(id, new TileData(id++, value, pos))
       // console.log("spawned at: ", pos)
         
       emptyPos.splice(chosenEmpty, 1)
     }
+    return id
   }
 
   /*
   Empty Tiles. Spawn 2 new tiles
   */
-  // createNewGame() {
-  //   this.tileId = 0
-  //   let newTiles = new Map<number, TileData>()
-  //   this.spawnRandomTiles(2, newTiles)
-  //   this.tiles = newTiles
-  // }
-
-  printTiles(tiles: Map<number, TileData>): string {
-    let output = ""
-    for (let tile of tiles.values()) {
-      output += "id: " + tile.id + "\n"
-      output += "value: " + tile.value + "\n"
-      output += "pos: [" + tile.pos.row + ", " + tile.pos.col + "] \n"
-      output += "combined: " + tile.combined + "\n"
-      output += "deleted: " + tile.deleted + "\n"
-      output += "distance: " + tile.distance + "\n"
-      output += "-----------------------------------------------------------\n"
-    }
-    return output
+  createNewGame() {
+    this.tileId = 0
+    let newTiles = new Map<number, TileData>()
+    this.tileId = this.spawnRandomTiles(2, newTiles, this.tileId)
+    this.tiles = newTiles
   }
 
   copyAndFilterTiles(tiles: Map<number, TileData>) {
@@ -140,9 +122,9 @@ export class GameComponent {
   }
 
   mapToMatrix(tiles: Map<number, TileData>): number[][] {
-    let matrix: number[][] = new Array(dimensions)
+    let matrix: number[][] = new Array(DIMENSIONS)
     for (let i = 0; i < matrix.length; i++) {
-      matrix[i] = new Array(dimensions).fill(-1)
+      matrix[i] = new Array(DIMENSIONS).fill(-1)
     }
     
     for (let tile of tiles.values()) {
@@ -156,21 +138,21 @@ export class GameComponent {
     if (row - 1 >= 0) {
       spaces.push(posMap[row - 1][col])
     }
-    if (row + 1 < dimensions) {
+    if (row + 1 < DIMENSIONS) {
       spaces.push(posMap[row + 1][col])
     }
     if (col - 1 >= 0) {
       spaces.push(posMap[row][col - 1])
     }
-    if (col + 1 < dimensions) {
+    if (col + 1 < DIMENSIONS) {
       spaces.push(posMap[row][col + 1])
     }
     return spaces
   }
 
   checkValidMove(tiles: Map<number, TileData>, posMap: number[][]) : boolean {
-    for (let i = 0; i < dimensions; i++) {
-      for (let j = 0; j < dimensions; j++) {
+    for (let i = 0; i < DIMENSIONS; i++) {
+      for (let j = 0; j < DIMENSIONS; j++) {
         if (posMap[i][j] >= 0) {
           let toCheck = this.getOccupiedSpace(posMap, i, j)
         
@@ -192,8 +174,8 @@ export class GameComponent {
 
   moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): PositionIndex {
     // console.log("looking at: ", sRow, sCol)
-    if (sCol >= dimensions || sRow >= dimensions || sCol < 0 || sRow < 0) {
-      if (sCol >= dimensions || sCol < 0) {
+    if (sCol >= DIMENSIONS || sRow >= DIMENSIONS || sCol < 0 || sRow < 0) {
+      if (sCol >= DIMENSIONS || sCol < 0) {
         // console.log("hit horizontal bounds")
         return {row: sRow, col: sCol - iCol}
       }
@@ -246,13 +228,13 @@ export class GameComponent {
   }
 
   moveTilesHorizontal(sCol: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>) {
-    for (let r = 0; r < dimensions; r++) {
+    for (let r = 0; r < DIMENSIONS; r++) {
       this.moveTilesRecurse(r, sCol, 0, iCol, posMatrix, tiles)
     }
   }
 
   moveTilesVertical(sRow: number, iRow: number, posMatrix: number[][], tiles: Map<number, TileData>) {
-    for (let c = 0; c < dimensions; c++) {
+    for (let c = 0; c < DIMENSIONS; c++) {
       this.moveTilesRecurse(sRow, c, iRow, 0, posMatrix, tiles)
     }
   }
@@ -266,8 +248,8 @@ export class GameComponent {
         posMatrix = this.mapToMatrix(updatedTiles)
 
         if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesVertical(dimensions - 1, -1, posMatrix, updatedTiles)
-          this.spawnRandomTiles(2, updatedTiles)
+          this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
 
@@ -279,7 +261,7 @@ export class GameComponent {
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
-          this.spawnRandomTiles(2, updatedTiles)
+          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
         
@@ -292,8 +274,8 @@ export class GameComponent {
         console.log(posMatrix.toString())
 
         if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesHorizontal(dimensions - 1, -1, posMatrix, updatedTiles)
-          this.spawnRandomTiles(2, updatedTiles)
+          this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
 
@@ -305,7 +287,7 @@ export class GameComponent {
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
-          this.spawnRandomTiles(2, updatedTiles)
+          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
 
