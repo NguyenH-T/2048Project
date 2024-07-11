@@ -1,4 +1,4 @@
-<div [style]="getAnimation()" class="tile">
+<div @spawnInOut [@valueColor]="value" [style]="getAnimation()" class="tile">
     <h1>
         {{value}}
     </h1>

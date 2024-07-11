@@ -17,7 +17,7 @@ export class TileMovementService {
     possiblePositions : PositionString[][] = [
         [{ top: '0', left: '0' }, { top: '0', left: '118%' }, { top: '0', left: '236%' }, { top: '0', left: '354.5%' }],
         [{ top: '118%', left: '0' }, { top: '118%', left: '118%' }, { top: '118%', left: '236%' }, { top: '118%', left: '354.5%' }],
-        [{ top: '236%', left: '0' }, { top: '236 %', left: '118%' }, { top: '236%', left: '236%' }, { top: '236%', left: '354.5%' }],
+        [{ top: '236%', left: '0' }, { top: '236%', left: '118%' }, { top: '236%', left: '236%' }, { top: '236%', left: '354.5%' }],
         [{ top: '354.5%', left: '0' }, { top: '354.5%', left: '118%' }, { top: '354.5%', left: '236%' }, { top: '354.5%', left: '354.5%' }]
     ]
 

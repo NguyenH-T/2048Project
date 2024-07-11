@@ -22,7 +22,6 @@ export class TileData {
 }
 //The chance for a tile to have a value of 4 instead of 2
 const chanceFor4Value = 0.25
-//0 based
 export const DIMENSIONS : number = 4
 
 @Injectable({
@@ -89,7 +88,6 @@ export class GameComponent {
   Empty Tiles. Spawn 2 new tiles
   */
   createNewGame() {
-    this.tileId = 0
     let newTiles = new Map<number, TileData>()
     this.tileId = this.spawnRandomTiles(2, newTiles, this.tileId)
     this.tiles = newTiles
@@ -271,8 +269,6 @@ export class GameComponent {
         updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
 
-        console.log(posMatrix.toString())
-
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
           this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
@@ -291,6 +287,12 @@ export class GameComponent {
           this.tiles = updatedTiles
         }
 
+        event.preventDefault()
+        break
+      case (' '):
+        updatedTiles = this.copyAndFilterTiles(this.tiles)
+        this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
+        this.tiles = updatedTiles
         event.preventDefault()
         break
     }

@@ -10,6 +10,7 @@ h1{
     position: absolute;
     width: 22%;
     height: 22%;
+    transform-origin: center;
     background-color: #c2c2c0;
     transition-property: all;
     transition-duration: 100ms;
