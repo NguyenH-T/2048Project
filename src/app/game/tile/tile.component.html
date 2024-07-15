@@ -1,4 +1,4 @@
-<div [style]="getAnimation()" class="tile">
+<div [style]="getAnimation()" class="tile" (transitionend)="animationCallback()">
     <h1>
         {{value}}
     </h1>

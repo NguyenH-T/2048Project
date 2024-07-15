@@ -18,6 +18,15 @@ export class TileComponent {
   @Input({ required: true }) deleted: boolean = false
   @Input({ required: true }) spawn: boolean = false
   private tileMovementService = inject(TileMovementService)
+  size = 0.2
+  opacity = 0.2
+
+  ngAfterViewInit() {
+    if (this.spawn) {
+      this.size = 1
+      this.opacity = 1 
+    }
+  }
 
   getColor(value: number) : string {
     switch (value) {
@@ -47,12 +56,19 @@ export class TileComponent {
     return ''
   }
 
+  animationCallback() {
+    // if (this.spawn) {
+    //   this.size = 1
+    // }
+  }
+
   getAnimation() {
     let stringPos = this.tileMovementService.getPosition(this.pos)
     return {
       backgroundColor: this.getColor(this.value),
-      transform: 'translate(' + stringPos.left + ", " + stringPos.top + ')',
+      transform: 'translate(' + stringPos.left + ", " + stringPos.top + ') scale(' + this.size + ')',
       zIndex: this.deleted ? '0' : '1',
+      opacity: this.opacity
     }
   }
 }
