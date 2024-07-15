@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Injectable, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Injectable, Output } from '@angular/core';
 import { TileComponent } from './tile/tile.component';
-import { PositionIndex } from './tile-movement.component';
+import { PositionIndex, TileMovementService } from './tile-movement.component';
 
 /*
 This class represents the data for each tile. So TileComponents is only the display and 
@@ -13,6 +13,7 @@ export class TileData {
   distance: number = 0
   combined = false
   deleted = false
+  spawn = false
   
   constructor(_id: number, _value: number, _pos: PositionIndex) {
     this.id = _id
@@ -42,9 +43,18 @@ export class GameComponent {
   //Unique id for each TileData
   tileId = 0
   tiles: Map<number, TileData> = new Map<number, TileData>()
+  tileMovement = inject(TileMovementService)
 
   constructor() {
     this.tileId = this.spawnRandomTiles(2, this.tiles, this.tileId)
+  } 
+
+  getStringTilePosTop(index: PositionIndex) {
+    return this.tileMovement.getPosition(index).top
+  }
+  
+  getStringTilePosLeft(index: PositionIndex) {
+    return this.tileMovement.getPosition(index).left
   }
 
   findEmptyPositions(tiles: Map<number, TileData>) : PositionIndex[] {
@@ -76,7 +86,9 @@ export class GameComponent {
       let chosenEmpty = Math.floor(Math.random() * emptyPos.length)
       let value = Math.random() < chanceFor4Value ? 4 : 2;
       let pos = emptyPos[chosenEmpty]
-      tiles.set(id, new TileData(id++, value, pos))
+      let newTile = new TileData(id++, value, pos)
+      newTile.spawn = true
+      tiles.set(id, newTile)
       // console.log("spawned at: ", pos)
         
       emptyPos.splice(chosenEmpty, 1)

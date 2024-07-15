@@ -1,7 +1,15 @@
 <div class="game-container">
     <div class="game">
         @for (tile of tiles.values(); track tile.id) {
-            <app-tile [id]="tile.id" [value]="tile.value" [pos]="tile.pos" [travelDist]="tile.distance" [deleted]="tile.deleted" [combined]="tile.combined"/>
+            <app-tile 
+            [id]="tile.id" 
+            [value]="tile.value" 
+            [pos]="tile.pos" 
+            [travelDist]="tile.distance" 
+            [deleted]="tile.deleted" 
+            [combined]="tile.combined"
+            [spawn] = "tile.spawn"
+            />
         }
         <div class="cell-grid">
             <div class="row-container">
