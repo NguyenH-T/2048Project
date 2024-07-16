@@ -22,7 +22,8 @@ export class TileData {
   }
 }
 //The chance for a tile to have a value of 4 instead of 2
-const chanceFor4Value = 0.25
+const chanceFor4Value = 0.10
+const SPAWN_AMOUNT = 1
 export const DIMENSIONS : number = 4
 
 @Injectable({
@@ -48,14 +49,6 @@ export class GameComponent {
   constructor() {
     this.tileId = this.spawnRandomTiles(2, this.tiles, this.tileId)
   } 
-
-  getStringTilePosTop(index: PositionIndex) {
-    return this.tileMovement.getPosition(index).top
-  }
-  
-  getStringTilePosLeft(index: PositionIndex) {
-    return this.tileMovement.getPosition(index).left
-  }
 
   findEmptyPositions(tiles: Map<number, TileData>) : PositionIndex[] {
     let emptyPos: PositionIndex[] = []
@@ -101,7 +94,7 @@ export class GameComponent {
   */
   createNewGame() {
     let newTiles = new Map<number, TileData>()
-    this.tileId = this.spawnRandomTiles(2, newTiles, this.tileId)
+    this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, newTiles, this.tileId)
     this.tiles = newTiles
   }
 
@@ -259,7 +252,7 @@ export class GameComponent {
 
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
-          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
+          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
 
@@ -271,7 +264,7 @@ export class GameComponent {
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
-          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
+          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
         
@@ -283,7 +276,7 @@ export class GameComponent {
 
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
-          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
+          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
 
@@ -295,7 +288,7 @@ export class GameComponent {
         
         if (this.checkValidMove(updatedTiles, posMatrix)) {
           this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
-          this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
+          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
         }
 
@@ -303,7 +296,7 @@ export class GameComponent {
         break
       case (' '):
         updatedTiles = this.copyAndFilterTiles(this.tiles)
-        this.tileId = this.spawnRandomTiles(2, updatedTiles, this.tileId)
+        this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
         this.tiles = updatedTiles
         event.preventDefault()
         break
