@@ -1,4 +1,4 @@
-<div [style]="getAnimation()" class="tile" (transitionend)="animationCallback()">
+<div [@position]='getPosition()' [@spawn]="getSpawn()" [@combine]="getCombine()" class="tile">
     <h1>
         {{value}}
     </h1>
