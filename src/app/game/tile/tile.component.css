@@ -10,6 +10,7 @@ h1{
     flex-grow: 1;
     width: 22%;
     height: 22%;
+    border-radius: 5%;
     transform-origin: center;
     background-color: #c2c2c0;
     transition-property: all;

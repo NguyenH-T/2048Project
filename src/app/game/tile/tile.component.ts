@@ -81,27 +81,27 @@ export class TileComponent {
   getColor(value: number): string {
     switch (value) {
       case (2):
-        return 'purple'
+        return '#B8B8B8'
       case (4):
-        return 'blue'
+        return '#A6B1B9'
       case (8):
-        return 'cyan'
+        return '#93ABBA'
       case (16):
-        return 'orange'
+        return '#81A4BC'
       case (32):
-        return 'red'
+        return '#6E9EBD'
       case (64):
-        return 'grey'
+        return '#5C97BE'
       case (128):
-        return 'grey'
+        return '#4A90BF'
       case (256):
-        return 'grey'
+        return '#378AC0'
       case (516):
-        return 'grey'
+        return '#2583C2'
       case (1024):
-        return 'grey'
+        return '#127DC3'
       case (2048):
-        return 'grey'
+        return '#0076C4'
     }
     return 'grey'
   }
