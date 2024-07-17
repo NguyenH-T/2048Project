@@ -208,7 +208,6 @@ export class GameComponent {
           if (data !== undefined) {
             data.pos = outcome
           }
-          moveData.changed = true
           // console.log("tile moved from " + "{" + sRow + ", " + sCol + "} -> " + "{" + data!.pos.row + ", " + data!.pos.col + "}")
           return { row: sRow, col: sCol }
         }
@@ -226,7 +225,6 @@ export class GameComponent {
               current.deleted = true
 
               moveData.points += search.value
-              moveData.changed = true
               return outcome
             }
             else if(current.id !== search.id) { //not combinable
@@ -235,7 +233,6 @@ export class GameComponent {
               current.pos.row = search.pos.row - iRow
               current.pos.col = search.pos.col - iCol
               
-              moveData.changed = true
               return { row: sRow, col: sCol }
             }
           }
@@ -246,19 +243,49 @@ export class GameComponent {
     }
   }
 
-  moveTilesHorizontal(sCol: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>) : TileMovement {
+  moveTilesHorizontal(sCol: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): TileMovement {
+    let original = new Map<number, PositionIndex>()
+    for (let tile of tiles.values()) {
+      original.set(tile.id, {row: tile.pos.row, col: tile.pos.col })
+    }
+
     let score = {points: 0, changed: false}
     for (let r = 0; r < DIMENSIONS; r++) {
       this.moveTilesRecurse(r, sCol, 0, iCol, posMatrix, tiles, score)
     }
+
+    for (let mem of original.entries()) {
+      let tile = tiles.get(mem[0])
+      if (tile !== undefined) {
+        if (tile.pos.row != mem[1].row || tile.pos.col != mem[1].col) {
+          score.changed = true
+        }
+      }
+    }
+
     return score
   }
 
-  moveTilesVertical(sRow: number, iRow: number, posMatrix: number[][], tiles: Map<number, TileData>) : TileMovement {
+  moveTilesVertical(sRow: number, iRow: number, posMatrix: number[][], tiles: Map<number, TileData>): TileMovement {
+    let original = new Map<number, PositionIndex>()
+    for (let tile of tiles.values()) {
+      original.set(tile.id, {row: tile.pos.row, col: tile.pos.col })
+    }
+
     let score = {points: 0, changed: false}
     for (let c = 0; c < DIMENSIONS; c++) {
       this.moveTilesRecurse(sRow, c, iRow, 0, posMatrix, tiles, score)
     }
+
+    for (let mem of original.entries()) {
+      let tile = tiles.get(mem[0])
+      if (tile !== undefined) {
+        if (tile.pos.row != mem[1].row || tile.pos.col != mem[1].col) {
+          score.changed = true
+        }
+      }
+    }
+
     return score
   }
 
