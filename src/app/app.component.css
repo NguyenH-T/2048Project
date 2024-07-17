@@ -1,5 +1,7 @@
 
 main {
+    --text-color: #404447;
+    --game-text-color: #ebebeb;
     position: absolute;
     top: 0;
     left: 0;
@@ -33,6 +35,7 @@ main {
 }
 
 .title {
+    color: var(--text-color);
     font-size: 6rem;
     font-weight: 900;
     margin: 0;
@@ -41,6 +44,7 @@ main {
 }
 
 .timer {
+    color: var(--text-color);
     font-size: 2rem;
     font-weight: 900;
     margin: 0;
@@ -61,7 +65,7 @@ main {
     padding: 3% 4%;
     border-radius: 5%;
     background-color: var(--button-color);
-    color: white;
+    color: var(--game-text-color);
     border: 0 solid white;
 }
 

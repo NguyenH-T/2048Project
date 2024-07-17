@@ -1,6 +1,16 @@
 import { Component, EventEmitter, inject, Injectable, Output } from '@angular/core';
 import { TileComponent } from './tile/tile.component';
 import { PositionIndex, TileMovementService } from './tile-movement.component';
+import { interval, Observable, timer } from 'rxjs';
+
+interface TileMovement {
+  points: number,
+  changed: boolean
+}
+
+export interface GameMoveEvent {
+  points: number
+}
 
 /*
 This class represents the data for each tile. So TileComponents is only the display and 
@@ -34,7 +44,6 @@ export const DIMENSIONS : number = 4
   standalone: true,
   host: {
     '(document:keydown)': 'keyDownHandler($event)',
-    '(childAnimationDone)': 'animationCallback($event)'
   },
   imports: [ TileComponent ],
   templateUrl: './game.component.html',
@@ -45,6 +54,7 @@ export class GameComponent {
   tileId = 0
   tiles: Map<number, TileData> = new Map<number, TileData>()
   tileMovement = inject(TileMovementService)
+  @Output() tileMoved = new EventEmitter()
 
   constructor() {
     this.tileId = this.spawnRandomTiles(2, this.tiles, this.tileId)
@@ -94,7 +104,7 @@ export class GameComponent {
   */
   createNewGame() {
     let newTiles = new Map<number, TileData>()
-    this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, newTiles, this.tileId)
+    this.tileId = this.spawnRandomTiles(2, newTiles, this.tileId)
     this.tiles = newTiles
   }
 
@@ -175,7 +185,7 @@ export class GameComponent {
     return false
   }
 
-  moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): PositionIndex {
+  moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>, moveData : TileMovement): PositionIndex {
     // console.log("looking at: ", sRow, sCol)
     if (sCol >= DIMENSIONS || sRow >= DIMENSIONS || sCol < 0 || sRow < 0) {
       if (sCol >= DIMENSIONS || sCol < 0) {
@@ -188,16 +198,17 @@ export class GameComponent {
       }
     }
     else {
-      let outcome = this.moveTilesRecurse(sRow + iRow, sCol + iCol, iRow, iCol, posMatrix, tiles)
+      let outcome = this.moveTilesRecurse(sRow + iRow, sCol + iCol, iRow, iCol, posMatrix, tiles, moveData)
       // console.log("outcome was: ", outcome)
       // console.log('current is: ', {row: sRow, col: sCol})
       if (posMatrix[sRow][sCol] >= 0) { //current is occupied slot
         // console.log("recursed to occupied")
-        if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was an empty slot
+        if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was an empty slot. As in the last item was the bound
           let data = tiles.get(posMatrix[sRow][sCol])
           if (data !== undefined) {
             data.pos = outcome
           }
+          moveData.changed = true
           // console.log("tile moved from " + "{" + sRow + ", " + sCol + "} -> " + "{" + data!.pos.row + ", " + data!.pos.col + "}")
           return { row: sRow, col: sCol }
         }
@@ -213,6 +224,9 @@ export class GameComponent {
               current.pos.row = search.pos.row
               current.pos.col = search.pos.col
               current.deleted = true
+
+              moveData.points += search.value
+              moveData.changed = true
               return outcome
             }
             else if(current.id !== search.id) { //not combinable
@@ -220,6 +234,8 @@ export class GameComponent {
               // console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + (search.pos.row - iRow) + ", " + (search.pos.col - iCol) + "}")
               current.pos.row = search.pos.row - iRow
               current.pos.col = search.pos.col - iCol
+              
+              moveData.changed = true
               return { row: sRow, col: sCol }
             }
           }
@@ -230,30 +246,37 @@ export class GameComponent {
     }
   }
 
-  moveTilesHorizontal(sCol: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>) {
+  moveTilesHorizontal(sCol: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>) : TileMovement {
+    let score = {points: 0, changed: false}
     for (let r = 0; r < DIMENSIONS; r++) {
-      this.moveTilesRecurse(r, sCol, 0, iCol, posMatrix, tiles)
+      this.moveTilesRecurse(r, sCol, 0, iCol, posMatrix, tiles, score)
     }
+    return score
   }
 
-  moveTilesVertical(sRow: number, iRow: number, posMatrix: number[][], tiles: Map<number, TileData>) {
+  moveTilesVertical(sRow: number, iRow: number, posMatrix: number[][], tiles: Map<number, TileData>) : TileMovement {
+    let score = {points: 0, changed: false}
     for (let c = 0; c < DIMENSIONS; c++) {
-      this.moveTilesRecurse(sRow, c, iRow, 0, posMatrix, tiles)
+      this.moveTilesRecurse(sRow, c, iRow, 0, posMatrix, tiles, score)
     }
+    return score
   }
 
   keyDownHandler(event: KeyboardEvent) {
     let updatedTiles: Map<number, TileData>
     let posMatrix: number[][]
+    let moveData: TileMovement
     switch (event.key) {
       case ('ArrowUp'):
         updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
 
-        if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+
+        moveData = this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+        if (moveData.changed) {
           this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
+          this.tileMoved.emit({points: moveData.points}) 
         }
 
         event.preventDefault()
@@ -262,10 +285,11 @@ export class GameComponent {
         updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
         
-        if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
+        moveData = this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
+        if (moveData.changed) {
           this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
+          this.tileMoved.emit({points: moveData.points}) 
         }
         
         event.preventDefault()
@@ -274,10 +298,11 @@ export class GameComponent {
         updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
 
-        if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+        moveData = this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+        if (moveData.changed) {
           this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
+          this.tileMoved.emit({points: moveData.points}) 
         }
 
         event.preventDefault()
@@ -286,18 +311,13 @@ export class GameComponent {
         updatedTiles = this.copyAndFilterTiles(this.tiles)
         posMatrix = this.mapToMatrix(updatedTiles)
         
-        if (this.checkValidMove(updatedTiles, posMatrix)) {
-          this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
+        moveData = this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
+        if (moveData.changed) {
           this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
           this.tiles = updatedTiles
+          this.tileMoved.emit({points: moveData.points}) 
         }
 
-        event.preventDefault()
-        break
-      case (' '):
-        updatedTiles = this.copyAndFilterTiles(this.tiles)
-        this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-        this.tiles = updatedTiles
         event.preventDefault()
         break
     }
