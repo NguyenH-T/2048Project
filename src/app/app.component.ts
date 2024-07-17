@@ -23,14 +23,13 @@ export class AppComponent {
       this.timerSub = timer(0, 1000).subscribe(() => {this.time++})
     }
     this.score += event.points
-    //TODO: add score to HTML
   }
 
   getTime() {
     if (this.time < 3600) {
       return new Date(this.time * 1000).toISOString().slice(14, 19)
     }
-    return '60:00'
+    return '+60:00'
   }
 
   newGameHandler() {
