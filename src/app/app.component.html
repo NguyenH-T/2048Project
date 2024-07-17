@@ -5,9 +5,16 @@
         2048
       </h1>
       <div class='right-container'>
-        <h2 class='timer'>
-          Time: {{getTime()}}
-        </h2>
+        <div class="score-container">
+          <h2 class='timer'>
+            {{getTime()}}
+          </h2>
+          <div class="score-box">
+            <h3 class="score-text">
+              {{score}}
+            </h3>
+          </div>
+        </div>
         <div class='menu-button-container'>
           <button class='menu-button'>
             Leaderboard

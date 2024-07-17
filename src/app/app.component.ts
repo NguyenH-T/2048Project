@@ -13,25 +13,29 @@ import { Observable, Subscription, timer } from 'rxjs';
 export class AppComponent {
   @ViewChild(GameComponent) game!: GameComponent
   time = 0
+  score = 0
   timerSub! : Subscription | undefined
   firstMove = true
 
   tileMoveHandler(event: GameMoveEvent) {
-    console.log('tile moved', event.points)
     if (this.firstMove) {
       this.firstMove = false
       this.timerSub = timer(0, 1000).subscribe(() => {this.time++})
     }
-
+    this.score += event.points
     //TODO: add score to HTML
   }
 
   getTime() {
-    return new Date(this.time * 1000).toISOString().slice(14, 19)
+    if (this.time < 3600) {
+      return new Date(this.time * 1000).toISOString().slice(14, 19)
+    }
+    return '60:00'
   }
 
   newGameHandler() {
     this.game.createNewGame()
+    this.score = 0
     this.firstMove = true
     this.time = 0
     if (this.timerSub !== undefined) {
