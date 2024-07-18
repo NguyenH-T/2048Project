@@ -4,7 +4,7 @@ This is a personal project to replicate the 2048 game as a way to learn Angular 
 
 # Project is done as of July 18th
 Well sort of. The main functionality of scoreing and a timing system has been finished as well as the overal polish of the project.
-I you would like to run this program just pull -> cd into the folder -> and enter 'ng serve'
+If you would like to run this program just pull -> cd into the folder -> and enter 'ng serve'
 
 ## Next Milestones
 There is some missing functionality that were extras that I wanted to tack onto the project as a way to practice more aspects of the web development stack.
