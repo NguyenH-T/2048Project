@@ -139,15 +139,12 @@ export class GameComponent {
   - both tiles are the same value
   - neither tile has already been combined
   */
-  private checkCombine(combiner: TileData | undefined, combinee: TileData | undefined) : boolean {
+  private checkCombine(combiner: TileData | undefined, combinee: TileData | undefined, ignoreAlreadyCombined? : boolean) : boolean {
     if (combinee !== undefined && combiner !== undefined) {
-      // console.log("combinee: ", combinee.value, ", combiner: ", combiner.value)
-      if (combinee.combined === true) {
-        // console.log("because combined = true")
+      if ((combinee.combined || combiner.combined) && ignoreAlreadyCombined === false) {
         return false
       }
       else if (combiner.id !== combinee.id && combiner.value === combinee.value) {
-        // console.log('because items are the same value')
         return true
       }
     }
@@ -186,7 +183,7 @@ export class GameComponent {
           if (posMap[i + 1][j] < 0) {
             return false
           }
-          else if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(posMap[i + 1][j]))) {
+          else if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(posMap[i + 1][j]), true)) {
             return false
           }
         }
@@ -194,7 +191,7 @@ export class GameComponent {
           if (posMap[i][j + 1] < 0) {
             return false
           }
-          else if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(posMap[i][j + 1]))) {
+          else if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(posMap[i][j + 1]), true)) {
             return false
           }
         }
