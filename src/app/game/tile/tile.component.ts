@@ -78,6 +78,9 @@ export class TileComponent {
   @Input({ required: true }) spawn: boolean = false
   private tileMovementService = inject(TileMovementService)
 
+  /*
+  gets the determined for the tile value
+  */
   getColor(value: number): string {
     switch (value) {
       case (2):
@@ -106,6 +109,9 @@ export class TileComponent {
     return 'grey'
   }
 
+  /*
+  returns the values for the position that the tile should be placed at when using animations
+  */
   getPosition() {
     let stringPos = this.tileMovementService.getPosition(this.pos)
     return {
@@ -120,6 +126,9 @@ export class TileComponent {
     }
   }
 
+  /*
+  returns the values for the position that the tile is placed at and plays the spawn animation
+  */
   getSpawn() {
     let stringPos = this.tileMovementService.getPosition(this.pos)
     return {
@@ -136,6 +145,9 @@ export class TileComponent {
     }
   }
 
+  /*
+  plays the combine animation
+  */
   getCombine() {
     let stringPos = this.tileMovementService.getPosition(this.pos)
     if (this.combined) {

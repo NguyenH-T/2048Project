@@ -60,19 +60,25 @@ export class GameComponent {
     this.tileId = this.spawnRandomTiles(2, this.tiles, this.tileId)
   } 
 
+
+  /*
+  Given a tile Map find all of the positions that have not been occupied by a tile.
+  */
   findEmptyPositions(tiles: Map<number, TileData>) : PositionIndex[] {
     let emptyPos: PositionIndex[] = []
 
     for (let i = 0; i < DIMENSIONS; i++) {
       for (let j = 0; j < DIMENSIONS; j++) {
         let found = false
+
+        //find any tile that has the position (i, j)
         for (let tile of tiles.values()) {
           if (tile.pos.row === i && tile.pos.col === j) {
             found = true
             break
           }
         } 
-        if (!found) {
+        if (!found) { //add to array if the position wasn't found
           emptyPos.push({row: i, col: j})
         }
       }
@@ -80,6 +86,9 @@ export class GameComponent {
     return emptyPos
   }
 
+  /*
+  Spawns a set amount of tiles into the Tiles map
+  */
   spawnRandomTiles(amount: number, tiles: Map<number, TileData>, id: number) : number {
     //create a list of all empty positions
     let emptyPos = this.findEmptyPositions(tiles)
@@ -92,7 +101,6 @@ export class GameComponent {
       let newTile = new TileData(id++, value, pos)
       newTile.spawn = true
       tiles.set(id, newTile)
-      // console.log("spawned at: ", pos)
         
       emptyPos.splice(chosenEmpty, 1)
     }
@@ -100,7 +108,7 @@ export class GameComponent {
   }
 
   /*
-  Empty Tiles. Spawn 2 new tiles
+  Create a new game state
   */
   createNewGame() {
     let newTiles = new Map<number, TileData>()
@@ -109,6 +117,9 @@ export class GameComponent {
     this.gameFail = false
   }
 
+  /*
+  Create a copy of a given Tiles map with deleted tiles removed. This copy is a shallow copy.
+  */
   copyAndFilterTiles(tiles: Map<number, TileData>) {
     let copy = new Map<number, TileData>()
     for (let tile of tiles.values()) {
@@ -120,6 +131,14 @@ export class GameComponent {
     return copy
   }
 
+
+  /*
+  Given two tiles check whether they are combinable
+
+  Combinable if two conditions are met:
+  - both tiles are the same value
+  - neither tile has already been combined
+  */
   private checkCombine(combiner: TileData | undefined, combinee: TileData | undefined) : boolean {
     if (combinee !== undefined && combiner !== undefined) {
       // console.log("combinee: ", combinee.value, ", combiner: ", combiner.value)
@@ -135,6 +154,9 @@ export class GameComponent {
     return false
   }
 
+  /*
+  Creates a 2d array matrix of a given tile where each tiles' position is mapped to that matrix with it's id
+  */
   mapToMatrix(tiles: Map<number, TileData>): number[][] {
     let matrix: number[][] = new Array(DIMENSIONS)
     for (let i = 0; i < matrix.length; i++) {
@@ -147,10 +169,17 @@ export class GameComponent {
     return matrix
   }
 
+  /*
+  For each tile check it's adjacent tile to it's right and below for a valid move
+
+  Valid moves include:
+  - can be combined
+  - empty position
+  */
   checkGameFail(posMap: number[][], tiles: Map<number, TileData>) : boolean {
     for (let i = 0; i < posMap.length; i++) {
       for (let j = 0; j < posMap[i].length; j++) {
-        if (posMap[i][j] < 0) {
+        if (posMap[i][j] < 0) { //edge case where the top left position can be an empty slot
           return false
         }
         if (i + 1 < posMap.length) {
@@ -174,30 +203,29 @@ export class GameComponent {
     return true
   }
 
+  /*
+  Searches the posMatrix starting from the (sRow, sCol) then increment (iRow, iCol).
+  When going back up the stack after hitting the playfield bound, update the tiles map according to the newly calculated values.
+  moveData is populated with the total score accumulated for the movement.
+  */
   moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>, moveData : TileMovement): PositionIndex {
-    // console.log("looking at: ", sRow, sCol)
-    if (sCol >= DIMENSIONS || sRow >= DIMENSIONS || sCol < 0 || sRow < 0) {
-      if (sCol >= DIMENSIONS || sCol < 0) {
-        // console.log("hit horizontal bounds")
+    if (sCol >= DIMENSIONS || sRow >= DIMENSIONS || sCol < 0 || sRow < 0) { //Hit one of either horizontal or vertical bound
+      if (sCol >= DIMENSIONS || sCol < 0) { //hit vertical
         return {row: sRow, col: sCol - iCol}
       }
-      else {
-        // console.log("hit vertical bounds")
+      else { //hit horizontal
         return {row: sRow - iRow, col: sCol}
       }
     }
     else {
       let outcome = this.moveTilesRecurse(sRow + iRow, sCol + iCol, iRow, iCol, posMatrix, tiles, moveData)
-      // console.log("outcome was: ", outcome)
-      // console.log('current is: ', {row: sRow, col: sCol})
       if (posMatrix[sRow][sCol] >= 0) { //current is occupied slot
-        // console.log("recursed to occupied")
         if (posMatrix[outcome.row][outcome.col] < 0) { //if the outcome was an empty slot. As in the last item was the bound
           let data = tiles.get(posMatrix[sRow][sCol])
-          if (data !== undefined) {
+          if (data !== undefined) { //set the current occupied slot to position of the bound
             data.pos = outcome
           }
-          // console.log("tile moved from " + "{" + sRow + ", " + sCol + "} -> " + "{" + data!.pos.row + ", " + data!.pos.col + "}")
+
           return { row: sRow, col: sCol }
         }
         else {
@@ -205,8 +233,6 @@ export class GameComponent {
           let search = tiles.get(posMatrix[outcome.row][outcome.col])
           if (current !== undefined && search !== undefined) {
             if (this.checkCombine(current, search)) { //Combinable
-              // console.log('combinable')
-              // console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + search.pos.row + ", " + search.pos.col + "}")
               search.combined = true
               search.value *= 2
               current.pos.row = search.pos.row
@@ -217,8 +243,6 @@ export class GameComponent {
               return outcome
             }
             else if(current.id !== search.id) { //not combinable
-              // console.log("not combinable")
-              // console.log("tile moved from " + "{" + current.pos.row + ", " + current.pos.col + "} -> " + "{" + (search.pos.row - iRow) + ", " + (search.pos.col - iCol) + "}")
               current.pos.row = search.pos.row - iRow
               current.pos.col = search.pos.col - iCol
               
@@ -227,14 +251,19 @@ export class GameComponent {
           }
         }
       }
-      // console.log("propogate")
       return outcome
     }
   }
 
+  /*
+  driver function for moveTilesRecurse() where the driver moves row-by-row
+  
+  sCol - starting column to search from
+  iCol - increment from starting column by amount (this can be negative)
+  */
   moveTilesHorizontal(sCol: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>): TileMovement {
     let original = new Map<number, PositionIndex>()
-    for (let tile of tiles.values()) {
+    for (let tile of tiles.values()) { //create a map of <id, positions>
       original.set(tile.id, {row: tile.pos.row, col: tile.pos.col })
     }
 
@@ -243,7 +272,7 @@ export class GameComponent {
       this.moveTilesRecurse(r, sCol, 0, iCol, posMatrix, tiles, score)
     }
 
-    for (let mem of original.entries()) {
+    for (let mem of original.entries()) { //for every tile that check if it's position has changed.
       let tile = tiles.get(mem[0])
       if (tile !== undefined) {
         if (tile.pos.row != mem[1].row || tile.pos.col != mem[1].col) {
@@ -255,9 +284,15 @@ export class GameComponent {
     return score
   }
 
+  /*
+  driver function for moveTilesRecurse() where the driver moves column-by-column
+
+  sRow - starting row to search from
+  iRow - increment from starting row by amount (this can be negative)
+  */
   moveTilesVertical(sRow: number, iRow: number, posMatrix: number[][], tiles: Map<number, TileData>): TileMovement {
     let original = new Map<number, PositionIndex>()
-    for (let tile of tiles.values()) {
+    for (let tile of tiles.values()) { //create a map of <id, positions>
       original.set(tile.id, {row: tile.pos.row, col: tile.pos.col })
     }
 
@@ -266,7 +301,7 @@ export class GameComponent {
       this.moveTilesRecurse(sRow, c, iRow, 0, posMatrix, tiles, score)
     }
 
-    for (let mem of original.entries()) {
+    for (let mem of original.entries()) { //for every tile check if its position has changed
       let tile = tiles.get(mem[0])
       if (tile !== undefined) {
         if (tile.pos.row != mem[1].row || tile.pos.col != mem[1].col) {

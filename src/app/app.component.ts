@@ -43,6 +43,9 @@ export class AppComponent {
   firstMove = true
   gameLost = false
 
+  /*
+  every time a tile moves add to points. If the first time a tile has moved, start the timer.
+  */
   tileMoveHandler(event: GameMoveEvent) {
     if (this.firstMove) {
       this.firstMove = false
@@ -51,6 +54,9 @@ export class AppComponent {
     this.score += event.points
   }
 
+  /*
+  formats the current time that has elapsed
+  */
   getTime() {
     if (this.time < 3600) {
       return new Date(this.time * 1000).toISOString().slice(14, 19)
@@ -58,6 +64,9 @@ export class AppComponent {
     return '+60:00'
   }
 
+  /*
+  when the game ends stop the timer, and display the lost screen.
+  */
   gameEndHandler() {
     if (this.timerSub !== undefined) {
       this.timerSub.unsubscribe()
@@ -67,6 +76,9 @@ export class AppComponent {
     })
   }
 
+  /*
+  creates a new game state
+  */
   newGameHandler() {
     this.score = 0
     this.firstMove = true
@@ -85,11 +97,12 @@ export class AppComponent {
     //TODO Database Integration
   }
 
+  //debugging function
   keyDownHandler(event: KeyboardEvent) {
-    //This is to pull up game end screen for testing
-    if (event.key == ' ') {
-      this.gameLost = true
-      event.preventDefault()
-    }
+    // //This is to pull up game end screen for testing
+    // if (event.key == ' ') {
+    //   this.gameLost = true
+    //   event.preventDefault()
+    // }
   }
 }
