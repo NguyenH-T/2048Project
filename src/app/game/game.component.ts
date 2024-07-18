@@ -320,79 +320,71 @@ export class GameComponent {
           updatedTiles = this.copyAndFilterTiles(this.tiles)
           posMatrix = this.mapToMatrix(updatedTiles)
 
-
-          moveData = this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
-          if (moveData.changed) {
-            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-
-            posMatrix = this.mapToMatrix(updatedTiles)
-            if (this.checkGameFail(posMatrix, updatedTiles)) {
-              this.gameFail = true
-              this.gameIsOver.emit()
-            }
-
-            this.tiles = updatedTiles
-            this.tileMoved.emit({ points: moveData.points })
+          if (this.checkGameFail(posMatrix, updatedTiles)) {
+            this.gameFail = true
+            this.gameIsOver.emit()
           }
-
+          else {
+            moveData = this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+            if (moveData.changed) {
+              this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
+              this.tiles = updatedTiles
+              this.tileMoved.emit({ points: moveData.points })
+            }
+          }
           event.preventDefault()
           break
         case ('ArrowDown'):
           updatedTiles = this.copyAndFilterTiles(this.tiles)
           posMatrix = this.mapToMatrix(updatedTiles)
-        
-          moveData = this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
-          if (moveData.changed) {
-            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
 
-            posMatrix = this.mapToMatrix(updatedTiles)
-            if (this.checkGameFail(posMatrix, updatedTiles)) {
-              this.gameFail = true
-              this.gameIsOver.emit()
-            }
-
-            this.tiles = updatedTiles
-            this.tileMoved.emit({ points: moveData.points })
+          if (this.checkGameFail(posMatrix, updatedTiles)) {
+            this.gameFail = true
+            this.gameIsOver.emit()
           }
-        
+          else {
+            moveData = this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
+            if (moveData.changed) {
+              this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId) 
+              this.tiles = updatedTiles
+              this.tileMoved.emit({ points: moveData.points })
+            }
+          }
           event.preventDefault()
           break
         case ('ArrowLeft'):
           updatedTiles = this.copyAndFilterTiles(this.tiles)
           posMatrix = this.mapToMatrix(updatedTiles)
 
-          moveData = this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
-          if (moveData.changed) {
-            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-
-            posMatrix = this.mapToMatrix(updatedTiles)
-            if (this.checkGameFail(posMatrix, updatedTiles)) {
-              this.gameFail = true
-              this.gameIsOver.emit()
-            }
-
-            this.tiles = updatedTiles
-            this.tileMoved.emit({ points: moveData.points })
+          if (this.checkGameFail(posMatrix, updatedTiles)) {
+            this.gameFail = true
+            this.gameIsOver.emit()
           }
-
+          else {
+            moveData = this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+            if (moveData.changed) {
+              this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
+              this.tiles = updatedTiles
+              this.tileMoved.emit({ points: moveData.points })
+            }
+          }
           event.preventDefault()
           break
         case ('ArrowRight'):
           updatedTiles = this.copyAndFilterTiles(this.tiles)
           posMatrix = this.mapToMatrix(updatedTiles)
         
-          moveData = this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
-          if (moveData.changed) {
-            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-
-            posMatrix = this.mapToMatrix(updatedTiles)
-            if (this.checkGameFail(posMatrix, updatedTiles)) {
-              this.gameFail = true
-              this.gameIsOver.emit()
+          if (this.checkGameFail(posMatrix, updatedTiles)) {
+            this.gameFail = true
+            this.gameIsOver.emit()
+          }
+          else {
+            moveData = this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
+            if (moveData.changed) {
+              this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
+              this.tiles = updatedTiles
+              this.tileMoved.emit({ points: moveData.points })
             }
-
-            this.tiles = updatedTiles
-            this.tileMoved.emit({ points: moveData.points })
           }
 
           event.preventDefault()
