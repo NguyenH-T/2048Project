@@ -62,7 +62,7 @@ export class AppComponent {
     if (this.timerSub !== undefined) {
       this.timerSub.unsubscribe()
     }
-    timer(1000).subscribe(() => {
+    timer(500).subscribe(() => {
       this.gameLost = true
     })
   }
@@ -82,9 +82,11 @@ export class AppComponent {
 
   submitLeaderboardHandler() {
     console.log('clicked')
+    //TODO Database Integration
   }
 
   keyDownHandler(event: KeyboardEvent) {
+    //This is to pull up game end screen for testing
     if (event.key == ' ') {
       this.gameLost = true
       event.preventDefault()
