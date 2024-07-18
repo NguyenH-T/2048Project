@@ -1,7 +1,6 @@
 import { Component, EventEmitter, inject, Injectable, Output } from '@angular/core';
 import { TileComponent } from './tile/tile.component';
-import { PositionIndex, TileMovementService } from './tile-movement.component';
-import { interval, Observable, timer } from 'rxjs';
+import { PositionIndex } from './tile-movement.component';
 
 interface TileMovement {
   points: number,
@@ -53,8 +52,9 @@ export class GameComponent {
   //Unique id for each TileData
   tileId = 0
   tiles: Map<number, TileData> = new Map<number, TileData>()
-  tileMovement = inject(TileMovementService)
+  gameFail = false
   @Output() tileMoved = new EventEmitter()
+  @Output() gameIsOver = new EventEmitter()
 
   constructor() {
     this.tileId = this.spawnRandomTiles(2, this.tiles, this.tileId)
@@ -106,6 +106,7 @@ export class GameComponent {
     let newTiles = new Map<number, TileData>()
     this.tileId = this.spawnRandomTiles(2, newTiles, this.tileId)
     this.tiles = newTiles
+    this.gameFail = false
   }
 
   copyAndFilterTiles(tiles: Map<number, TileData>) {
@@ -146,43 +147,31 @@ export class GameComponent {
     return matrix
   }
 
-  private getOccupiedSpace(posMap: number[][], row: number, col: number): number[] {
-    let spaces = []
-    if (row - 1 >= 0) {
-      spaces.push(posMap[row - 1][col])
-    }
-    if (row + 1 < DIMENSIONS) {
-      spaces.push(posMap[row + 1][col])
-    }
-    if (col - 1 >= 0) {
-      spaces.push(posMap[row][col - 1])
-    }
-    if (col + 1 < DIMENSIONS) {
-      spaces.push(posMap[row][col + 1])
-    }
-    return spaces
-  }
-
-  checkValidMove(tiles: Map<number, TileData>, posMap: number[][]) : boolean {
-    for (let i = 0; i < DIMENSIONS; i++) {
-      for (let j = 0; j < DIMENSIONS; j++) {
-        if (posMap[i][j] >= 0) {
-          let toCheck = this.getOccupiedSpace(posMap, i, j)
-        
-          for (let space of toCheck) {
-            if (space >= 0) { //occupied space
-              if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(space))) { //check if can combine
-                return true
-              }
-            }
-            else { //unoccupied space
-              return true
-            }
+  checkGameFail(posMap: number[][], tiles: Map<number, TileData>) : boolean {
+    for (let i = 0; i < posMap.length; i++) {
+      for (let j = 0; j < posMap[i].length; j++) {
+        if (posMap[i][j] < 0) {
+          return false
+        }
+        if (i + 1 < posMap.length) {
+          if (posMap[i + 1][j] < 0) {
+            return false
+          }
+          else if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(posMap[i + 1][j]))) {
+            return false
+          }
+        }
+        if (j + 1 < posMap[i].length) {
+          if (posMap[i][j + 1] < 0) {
+            return false
+          }
+          else if (this.checkCombine(tiles.get(posMap[i][j]), tiles.get(posMap[i][j + 1]))) {
+            return false
           }
         }
       }
     }
-    return false
+    return true
   }
 
   moveTilesRecurse(sRow: number, sCol: number, iRow: number, iCol: number, posMatrix: number[][], tiles: Map<number, TileData>, moveData : TileMovement): PositionIndex {
@@ -290,63 +279,93 @@ export class GameComponent {
   }
 
   keyDownHandler(event: KeyboardEvent) {
-    let updatedTiles: Map<number, TileData>
-    let posMatrix: number[][]
-    let moveData: TileMovement
-    switch (event.key) {
-      case ('ArrowUp'):
-        updatedTiles = this.copyAndFilterTiles(this.tiles)
-        posMatrix = this.mapToMatrix(updatedTiles)
+    if (!this.gameFail) {
+      let updatedTiles: Map<number, TileData>
+      let posMatrix: number[][]
+      let moveData: TileMovement
+      switch (event.key) {
+        case ('ArrowUp'):
+          updatedTiles = this.copyAndFilterTiles(this.tiles)
+          posMatrix = this.mapToMatrix(updatedTiles)
 
 
-        moveData = this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
-        if (moveData.changed) {
-          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-          this.tiles = updatedTiles
-          this.tileMoved.emit({points: moveData.points}) 
-        }
+          moveData = this.moveTilesVertical(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+          if (moveData.changed) {
+            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
 
-        event.preventDefault()
-        break
-      case ('ArrowDown'):
-        updatedTiles = this.copyAndFilterTiles(this.tiles)
-        posMatrix = this.mapToMatrix(updatedTiles)
+            posMatrix = this.mapToMatrix(updatedTiles)
+            if (this.checkGameFail(posMatrix, updatedTiles)) {
+              this.gameFail = true
+              this.gameIsOver.emit()
+            }
+
+            this.tiles = updatedTiles
+            this.tileMoved.emit({ points: moveData.points })
+          }
+
+          event.preventDefault()
+          break
+        case ('ArrowDown'):
+          updatedTiles = this.copyAndFilterTiles(this.tiles)
+          posMatrix = this.mapToMatrix(updatedTiles)
         
-        moveData = this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
-        if (moveData.changed) {
-          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-          this.tiles = updatedTiles
-          this.tileMoved.emit({points: moveData.points}) 
-        }
+          moveData = this.moveTilesVertical(0, 1, posMatrix, updatedTiles)
+          if (moveData.changed) {
+            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
+
+            posMatrix = this.mapToMatrix(updatedTiles)
+            if (this.checkGameFail(posMatrix, updatedTiles)) {
+              this.gameFail = true
+              this.gameIsOver.emit()
+            }
+
+            this.tiles = updatedTiles
+            this.tileMoved.emit({ points: moveData.points })
+          }
         
-        event.preventDefault()
-        break
-      case ('ArrowLeft'): 
-        updatedTiles = this.copyAndFilterTiles(this.tiles)
-        posMatrix = this.mapToMatrix(updatedTiles)
+          event.preventDefault()
+          break
+        case ('ArrowLeft'):
+          updatedTiles = this.copyAndFilterTiles(this.tiles)
+          posMatrix = this.mapToMatrix(updatedTiles)
 
-        moveData = this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
-        if (moveData.changed) {
-          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-          this.tiles = updatedTiles
-          this.tileMoved.emit({points: moveData.points}) 
-        }
+          moveData = this.moveTilesHorizontal(DIMENSIONS - 1, -1, posMatrix, updatedTiles)
+          if (moveData.changed) {
+            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
 
-        event.preventDefault()
-        break
-      case ('ArrowRight'):
-        updatedTiles = this.copyAndFilterTiles(this.tiles)
-        posMatrix = this.mapToMatrix(updatedTiles)
+            posMatrix = this.mapToMatrix(updatedTiles)
+            if (this.checkGameFail(posMatrix, updatedTiles)) {
+              this.gameFail = true
+              this.gameIsOver.emit()
+            }
+
+            this.tiles = updatedTiles
+            this.tileMoved.emit({ points: moveData.points })
+          }
+
+          event.preventDefault()
+          break
+        case ('ArrowRight'):
+          updatedTiles = this.copyAndFilterTiles(this.tiles)
+          posMatrix = this.mapToMatrix(updatedTiles)
         
-        moveData = this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
-        if (moveData.changed) {
-          this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
-          this.tiles = updatedTiles
-          this.tileMoved.emit({points: moveData.points}) 
-        }
+          moveData = this.moveTilesHorizontal(0, 1, posMatrix, updatedTiles)
+          if (moveData.changed) {
+            this.tileId = this.spawnRandomTiles(SPAWN_AMOUNT, updatedTiles, this.tileId)
 
-        event.preventDefault()
-        break
+            posMatrix = this.mapToMatrix(updatedTiles)
+            if (this.checkGameFail(posMatrix, updatedTiles)) {
+              this.gameFail = true
+              this.gameIsOver.emit()
+            }
+
+            this.tiles = updatedTiles
+            this.tileMoved.emit({ points: moveData.points })
+          }
+
+          event.preventDefault()
+          break
+      }
     }
   }
 }

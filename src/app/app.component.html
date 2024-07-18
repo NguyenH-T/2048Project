@@ -25,6 +25,16 @@
         </div>
       </div>
     </div>
-    <app-game (tileMoved)="tileMoveHandler($event)"/>
+    @if(gameLost) {
+      <div class="fail-screen" @gameState>
+        <h2 class="game-over-text">
+          Game Over
+        </h2>
+        <button class="leaderboard-submit" (click)="submitLeaderboardHandler()">
+          Submit to Leaderboard
+        </button>
+      </div>
+    }
+    <app-game (tileMoved)="tileMoveHandler($event)" (gameIsOver)="gameEndHandler()"/>
   </div>
 </main>
