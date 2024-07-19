@@ -14,6 +14,10 @@ As for the database, I've done some SQL development before as part of a Database
 
 On the other hand, deploying onto a server with a domain is something I have never done before. So that will take a longer amount of time to figure out.
 
+## AWS deployment
+you can access it here: 
+[AWS Site](http://2048project.s3-website.us-east-2.amazonaws.com/)
+
 ## Development Reflection of Part 1
 This project was done without any tutorials and with Angular which I find is much more difficult to learn then React. However, it also has a lot more inbuilt features like the animation library, and router to name a few. It was a insightful experience and I feel that I've become much more comfortable with how web apps interract under the hood. 
 
