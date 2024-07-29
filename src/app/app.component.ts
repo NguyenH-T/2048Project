@@ -44,6 +44,7 @@ export class AppComponent {
   firstMove = true
   gameLost = false
   leaderboardScores = new Array<Score>()
+  showLeaderboard = false
 
   constructor(private api: DatabaseAPIService) {
 

@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { Score } from '../../Database-API-Service.component';
 
 @Component({
   selector: 'app-leaderboard',
@@ -8,5 +9,5 @@ import { Component } from '@angular/core';
   styleUrl: './leaderboard.component.css'
 })
 export class LeaderboardComponent {
-
+  @Input({ required: true }) scores = new Array<Score>()
 }

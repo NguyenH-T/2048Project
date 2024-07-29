@@ -1,5 +1,8 @@
 <main>
   <div class='content'>
+    @if(showLeaderboard) {
+      <app-leaderboard scores="leaderboardScores"/>
+    }
     <div class='head-container'>
       <h1 class='title'>
         2048
