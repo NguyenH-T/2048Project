@@ -1,8 +1,9 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, Injectable, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { GameComponent, GameMoveEvent } from './game/game.component';
 import { Observable, Subscription, timer } from 'rxjs';
 import { animate, state, style, transition, trigger } from '@angular/animations';
+import { DatabaseAPIService, Score } from './Database-API-Service.component';
 
 @Component({
   selector: 'app-root',
@@ -42,6 +43,11 @@ export class AppComponent {
   timerSub! : Subscription | undefined
   firstMove = true
   gameLost = false
+  leaderboardScores = new Array<Score>()
+
+  constructor(private api: DatabaseAPIService) {
+
+  }
 
   /*
   every time a tile moves add to points. If the first time a tile has moved, start the timer.
@@ -89,6 +95,13 @@ export class AppComponent {
     this.gameLost = false
     timer(500).subscribe(() => {
       this.game.createNewGame()
+    })
+  }
+
+  showLeaderboardHandler() {
+    this.api.getAllScores().subscribe(res => {
+      this.leaderboardScores = res
+      
     })
   }
 
