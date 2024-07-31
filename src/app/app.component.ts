@@ -4,6 +4,7 @@ import { GameComponent, GameMoveEvent } from './game/game.component';
 import { Observable, Subscription, timer } from 'rxjs';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { DatabaseAPIService, Score } from './Database-API-Service.component';
+import { LeaderboardComponent } from './leaderboard/leaderboard.component';
 
 @Component({
   selector: 'app-root',
@@ -32,7 +33,7 @@ import { DatabaseAPIService, Score } from './Database-API-Service.component';
   host: {
     '(document:keydown)': 'keyDownHandler($event)',
   },
-  imports: [RouterOutlet, GameComponent],
+  imports: [RouterOutlet, GameComponent, LeaderboardComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -100,6 +101,7 @@ export class AppComponent {
   }
 
   showLeaderboardHandler() {
+    this.showLeaderboard = true
     this.api.getAllScores().subscribe(res => {
       this.leaderboardScores = res
       

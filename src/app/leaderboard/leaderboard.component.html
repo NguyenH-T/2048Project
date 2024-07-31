@@ -1,0 +1,27 @@
+<div class="leaderboard-container">
+    <div class="leaderboard-head-container">
+        <div class="leaderboard-searchbar-container">
+            <input class="leaderboard-searchbar"/>
+            <button class="search-button">
+                Search
+            </button>
+        </div>
+        <div class="leaderboard-sort-container">
+            <h4 class="sort-by">
+                Sort by:
+            </h4>
+            <button class="sort-button">
+                Score
+            </button>
+            <button class="sort-button">
+                Time
+            </button>
+        </div>
+    </div>
+    <div class="leaderboard-scores-container">
+        <app-leaderboard-cell username="john" score="0000" time="00:00" />
+        <app-leaderboard-cell username="john" score="0000" time="00:00" />
+        <app-leaderboard-cell username="john" score="0000" time="00:00" />
+    </div>
+</div>
+<div class="leaderboard-background" (click)="backgroundClickHandler()"></div>

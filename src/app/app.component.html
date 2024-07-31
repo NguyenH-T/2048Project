@@ -1,8 +1,5 @@
 <main>
   <div class='content'>
-    @if(showLeaderboard) {
-      <app-leaderboard scores="leaderboardScores"/>
-    }
     <div class='head-container'>
       <h1 class='title'>
         2048
@@ -41,3 +38,6 @@
     <app-game (tileMoved)="tileMoveHandler($event)" (gameIsOver)="gameEndHandler()"/>
   </div>
 </main>
+@if(showLeaderboard) {
+  <app-leaderboard [scores]="leaderboardScores" [(showLeaderboard)]="showLeaderboard"/>
+}
