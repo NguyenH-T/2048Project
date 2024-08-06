@@ -3,12 +3,12 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 
 export interface Score {
-    username: String,
+    username: string,
     score: number,
     time: number
 }
 
-const APIURL : String = "http://localhost:8080"
+const APIURL : string = "http://localhost:8080"
 
 @Injectable({
     providedIn: 'root'
@@ -19,7 +19,7 @@ export class DatabaseAPIService {
 
     }
 
-    getAllScores(): Observable<Array<Score>> {
+    getAllScores(): Observable<Score[]> {
         return this.http.get<Score[]>(APIURL + '/scores')
     }
 

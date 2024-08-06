@@ -10,18 +10,24 @@
             <h4 class="sort-by">
                 Sort by:
             </h4>
-            <button class="sort-button">
-                Score
-            </button>
-            <button class="sort-button">
-                Time
-            </button>
+            <select class="leaderboard-sort-select">
+                <option value="score">Score</option>
+                <option value="time">Time</option>
+            </select>
         </div>
     </div>
     <div class="leaderboard-scores-container">
-        <app-leaderboard-cell username="john" score="0000" time="00:00" />
-        <app-leaderboard-cell username="john" score="0000" time="00:00" />
-        <app-leaderboard-cell username="john" score="0000" time="00:00" />
+        @if(scores | async; as scores) {
+            @for(score of scores; track $index) {
+                <app-leaderboard-cell [username]="score.username" [score]="score.score" [time]="score.time"/>
+            }
+        } @else {
+            <div class="leaderboard-score-loading"> 
+                <div class="material-symbols-outlined">
+                    progress_activity
+                </div>
+            </div>
+        }
     </div>
 </div>
 <div class="leaderboard-background" (click)="backgroundClickHandler()"></div>

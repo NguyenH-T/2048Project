@@ -10,7 +10,7 @@
     justify-content: space-between;
     padding: 1%;
     border-radius: 20px 20px 0 0;
-    background-color: white;
+    background-color: #4c585e;
 }
 
 .leaderboard-head-container {
@@ -21,7 +21,7 @@
     justify-content: space-between;
     margin: auto;
     border-radius: 10px 10px 0 0;
-    background-color: black;
+    background-color: #282c2e;
 }
 
 .leaderboard-searchbar-container {
@@ -41,7 +41,16 @@
     margin: 0 0 0 auto;
     padding: 0 20px 0 20px;
     border: 0 solid white;
-    border-radius: 0 30px 30px 0;
+    background-color: #89b6c7;
+    border-radius: 0 5px 5px 0;
+}
+
+.search-button:hover {
+    background-color: #92c1d4;
+}
+
+.search-button:active {
+    background-color: #89b6c7;
 }
 
 .leaderboard-searchbar {
@@ -51,32 +60,71 @@
     width: 100%;
     font-family: 'Manrope';
     font-size: 13pt;
-    font-weight: 500;
+    font-weight: 600;
+    background-color: #bdd5de;
+    color: #404447;
     border: 0 solid white;
-    border-radius: 30px 0 0 30px;
+    border-radius: 5px 0 0 5px;
 }
 
 .leaderboard-sort-container {
-    margin: auto 2% 0.8% 2%;
+    margin: auto 2% 0.5% 2%;
     width: auto;
     height: 20px;
-    background-color: red;
     display: flex;
     flex-direction: row;
 }
 
-.sort-button {
+.leaderboard-sort-select {
     margin: 0 5px 0 0;
-    padding: 0 10px;
+    padding: 0 10px 10px 10px;
     border-radius: 20px;
+    font-family: 'Manrope';
+    font-weight: 500;
+    background-color: #c2c2c2;
+    color: #404447;
     border: 0 solid white;
+}
+
+.leaderboard-sort-select option {
+    font-family: 'Manrope';
 }
 
 .sort-by {
     margin: 0 5px 0 0;
     font-family: 'Manrope';
     font-size: 10pt;
-    color: white;
+    color: #ebebeb;
+}
+
+.leaderboard-score-loading {
+    width: 100%;
+    height: 100%;
+    padding-top: 25%;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+    'FILL' 0,
+    'wght' 500,
+    'GRAD' 200,
+    'opsz' 24;
+    color: #ebebeb;
+    animation: 2s infinite normal loading-spin;
+    animation-timing-function: linear;
+    transform-origin: center;
+    font-size: 100pt;
+}
+
+@keyframes loading-spin{
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
 }
 
 .leaderboard-scores-container {
@@ -84,7 +132,7 @@
     width: 100%;
     height: 100%;
     padding: 10px 2%;
-    background-color: blue;
+    background-color: #282c2e;
     flex-direction: column;
 }
 
@@ -95,6 +143,5 @@
     top: 0;
     left: 0;
     z-index: 3;
-    background-color: white;
     opacity: 0.2;
 }

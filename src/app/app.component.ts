@@ -102,10 +102,6 @@ export class AppComponent {
 
   showLeaderboardHandler() {
     this.showLeaderboard = true
-    this.api.getAllScores().subscribe(res => {
-      this.leaderboardScores = res
-      
-    })
   }
 
   submitLeaderboardHandler() {

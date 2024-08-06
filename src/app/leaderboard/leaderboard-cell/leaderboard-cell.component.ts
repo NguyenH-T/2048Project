@@ -9,6 +9,6 @@ import { Component, Input } from '@angular/core';
 })
 export class LeaderboardCellComponent {
   @Input({ required: true }) username = ""
-  @Input({ required: true }) score = "0"
-  @Input({ required: true }) time = "00:00"
+  @Input({ required: true }) score = 0
+  @Input({ required: true }) time = 0
 }
